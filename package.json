@@ -11,6 +11,6 @@
   "dependencies": {
     "animate.css": "^3.7.0",
     "gh-pages": "^2.0.1",
-    "node-sass": "^4.11.0"
+    "node-sass": "^7.0.0"
   }
 }
