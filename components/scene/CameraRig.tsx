@@ -11,6 +11,15 @@ const PANEL_WIDTH = 460;
 const SHEET_FRACTION = 0.56;
 export const DESKTOP_MIN = 820;
 
+/** `?cam=x,y,z,tx,ty,tz` overrides the overview camera — handy for framing and close-up checks. */
+function debugCamera() {
+  if (typeof window === "undefined") return null;
+  const v = new URLSearchParams(window.location.search).get("cam")?.split(",").map(Number);
+  return v?.length === 6 && v.every(Number.isFinite)
+    ? { position: v.slice(0, 3) as [number, number, number], target: v.slice(3) as [number, number, number] }
+    : null;
+}
+
 const intro = new THREE.Vector3(...HOME_CAMERA.position).add(new THREE.Vector3(0.9, 0.35, 1.3));
 
 /**
@@ -24,6 +33,7 @@ export function CameraRig() {
   const shift = useRef({ x: 0, y: 0 });
   const desiredPos = useRef(new THREE.Vector3());
   const desiredTgt = useRef(new THREE.Vector3());
+  const debug = useRef(debugCamera());
 
   useFrame((state, dt) => {
     const { section, reducedMotion, touch, sceneReady } = useStore.getState();
@@ -31,7 +41,7 @@ export function CameraRig() {
     const { width, height } = state.size;
     const aspect = width / height;
     const portrait = aspect < 0.8;
-    const pose = s ? s.camera : portrait ? HOME_CAMERA_PORTRAIT : HOME_CAMERA;
+    const pose = s ? s.camera : (debug.current ?? (portrait ? HOME_CAMERA_PORTRAIT : HOME_CAMERA));
     const desktop = width >= DESKTOP_MIN;
 
     desiredTgt.current.set(...pose.target);

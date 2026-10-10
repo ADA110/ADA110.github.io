@@ -7,8 +7,8 @@ import * as THREE from "three";
 import { site } from "@/content/site";
 import { useStore } from "@/lib/store";
 import { cssVar, paintedTexture } from "@/lib/textures";
-import { Segment } from "./helpers";
 import { Hotspot } from "./Hotspot";
+import { cloneScanned, useModel, useScanned, useShadowClone, withArtwork } from "./pbr";
 import { ROOM } from "./Room";
 
 const WALL = ROOM.back;
@@ -64,7 +64,8 @@ function Paddle() {
 // ---------------- hiking pack with a sleeping pad strapped on top ----------------
 
 function Backpack() {
-  const shell = { color: "#c4552d", roughness: 0.85 } as const;
+  const wool = useScanned("caban", [1.5, 2]);
+  const shell = { ...wool, color: "#e07a4f" } as const;
   const dark = { color: "#2b2f33", roughness: 0.8 } as const;
   return (
     <group position={[-1.08, 0, WALL + 0.15]} rotation={[-0.12, 0.18, 0]}>
@@ -117,8 +118,9 @@ function Backpack() {
 // ---------------- hiking boots ----------------
 
 function Boot({ position, rotation }: { position: [number, number, number]; rotation: number }) {
-  const leather = { color: "#6b4529", roughness: 0.78 } as const;
-  const suede = { color: "#8a6a4a", roughness: 0.95 } as const;
+  const hide = useScanned("brown_leather", [0.6, 0.6]);
+  const leather = { ...hide } as const;
+  const suede = { ...hide, color: "#b08a66" } as const;
   return (
     <group position={position} rotation={[0, rotation, 0]}>
       {/* lugged rubber sole */}
@@ -164,7 +166,7 @@ function Boot({ position, rotation }: { position: [number, number, number]; rota
 function TrailMap() {
   const map = useMemo(
     () =>
-      paintedTexture(420, 560, (ctx, w, h) => {
+      paintedTexture(420, 622, (ctx, w, h) => {
         // contour lines from a smooth height field
         const img = ctx.createImageData(w, h);
         const n = (x: number, y: number) =>
@@ -219,67 +221,38 @@ function TrailMap() {
       }),
     [],
   );
-  const W = 0.4;
-  const H = 0.53;
-  return (
-    <group position={[0.64, 1.6, WALL + 0.012]}>
-      <RoundedBox args={[W + 0.03, H + 0.03, 0.02]} radius={0.004} castShadow receiveShadow>
-        <meshStandardMaterial color="#1b1b1b" roughness={0.6} />
-      </RoundedBox>
-      <mesh position={[0, 0, 0.0105]}>
-        <planeGeometry args={[W, H]} />
-        <meshStandardMaterial map={map.tex} roughness={0.85} />
-      </mesh>
-      <mesh position={[0, 0, 0.012]}>
-        <planeGeometry args={[W, H]} />
-        <meshPhysicalMaterial transparent opacity={0.08} roughness={0.04} depthWrite={false} />
-      </mesh>
-    </group>
-  );
+  const { scene } = useModel("hanging_picture_frame_01");
+  const frame = useMemo(() => {
+    map.tex.flipY = false; // glTF UV convention
+    return cloneScanned(scene, (mesh) => (mesh.material = withArtwork(mesh.material, "hanging_picture_frame_01_artwork", map.tex)));
+  }, [scene, map]);
+  return <primitive object={frame} position={[0.64, 1.6, WALL + 0.001]} scale={0.62} />;
 }
 
-// ---------------- camping lantern on the windowsill (glows when the lamp is off) ----------------
+// ---------------- brass hurricane lantern on the windowsill (glows when the lamp is off) ----------------
 
 function Lantern() {
-  const glow = useRef<THREE.MeshStandardMaterial>(null);
+  const { scene } = useModel("Lantern_01");
   const light = useRef<THREE.PointLight>(null);
+  const flame = useRef<THREE.MeshStandardMaterial>(null);
   const level = useRef(0);
+  const lantern = useShadowClone(scene);
   useFrame((s, dt) => {
-    const goal = useStore.getState().lampOn ? 0.15 : 1;
+    const goal = useStore.getState().lampOn ? 0.12 : 1;
     level.current += (goal - level.current) * (1 - Math.exp(-3 * dt));
-    const flicker = 0.92 + 0.08 * Math.sin(s.clock.elapsedTime * 13) * Math.sin(s.clock.elapsedTime * 7.3);
-    if (glow.current) glow.current.emissiveIntensity = level.current * 5 * flicker;
-    if (light.current) light.current.intensity = level.current * 0.35 * flicker;
+    const flicker = 0.9 + 0.1 * Math.sin(s.clock.elapsedTime * 13) * Math.sin(s.clock.elapsedTime * 7.3);
+    if (flame.current) flame.current.emissiveIntensity = level.current * 8 * flicker;
+    if (light.current) light.current.intensity = level.current * 0.4 * flicker;
   });
-  const green = { color: "#2f5a3c", roughness: 0.45, metalness: 0.6 } as const;
   return (
-    <group position={[-1.53, ROOM.window.y0 + 0.003, 0.58]}>
-      <mesh position={[0, 0.015, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.04, 0.045, 0.03, 24]} />
-        <meshStandardMaterial {...green} />
+    <group position={[-1.53, ROOM.window.y0 + 0.003, 0.58]} rotation={[0, 0.8, 0]} scale={0.8}>
+      <primitive object={lantern} />
+      {/* wick flame */}
+      <mesh position={[0, 0.1, 0]} scale={[1, 1.8, 1]}>
+        <sphereGeometry args={[0.008, 16, 12]} />
+        <meshStandardMaterial ref={flame} color="#ffcf8a" emissive="#ffa23c" emissiveIntensity={0} />
       </mesh>
-      <mesh position={[0, 0.075, 0]}>
-        <cylinderGeometry args={[0.034, 0.034, 0.09, 24, 1, true]} />
-        <meshPhysicalMaterial color="#fff6e8" transparent opacity={0.35} roughness={0.15} side={THREE.DoubleSide} depthWrite={false} />
-      </mesh>
-      <mesh position={[0, 0.075, 0]}>
-        <cylinderGeometry args={[0.008, 0.008, 0.05, 12]} />
-        <meshStandardMaterial ref={glow} color="#ffd9a0" emissive="#ffb35c" emissiveIntensity={0} />
-      </mesh>
-      {[-1, 1].map((s) => (
-        <Segment key={s} from={[s * 0.034, 0.03, 0]} to={[s * 0.034, 0.12, 0]} radius={0.003}>
-          <meshStandardMaterial {...green} />
-        </Segment>
-      ))}
-      <mesh position={[0, 0.128, 0]} castShadow>
-        <cylinderGeometry args={[0.025, 0.042, 0.02, 24]} />
-        <meshStandardMaterial {...green} />
-      </mesh>
-      <mesh position={[0, 0.155, 0]}>
-        <torusGeometry args={[0.028, 0.003, 8, 24, Math.PI]} />
-        <meshStandardMaterial color="#b9bcc0" metalness={1} roughness={0.3} />
-      </mesh>
-      <pointLight ref={light} position={[0, 0.08, 0.05]} color="#ffb35c" intensity={0} distance={2.5} decay={2} />
+      <pointLight ref={light} position={[0, 0.11, 0.04]} color="#ffb35c" intensity={0} distance={2.5} decay={2} />
     </group>
   );
 }

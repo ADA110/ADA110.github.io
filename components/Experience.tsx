@@ -1,5 +1,6 @@
 "use client";
 
+import { useProgress } from "@react-three/drei";
 import dynamic from "next/dynamic";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
@@ -27,6 +28,23 @@ function write(key: string, value: string) {
   try {
     localStorage.setItem(key, value);
   } catch {}
+}
+
+/** Full-screen intro shown while the scanned models and textures download. */
+function Loader({ done }: { done: boolean }) {
+  const { progress, active } = useProgress();
+  const pct = active ? Math.round(progress) : done ? 100 : Math.max(5, Math.round(progress));
+  return (
+    <div className={`loader${done ? " done" : ""}`} aria-hidden={done}>
+      <div className="loader-inner">
+        <p className="loader-name">Setting up the desk</p>
+        <div className="loader-bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+          <span style={{ width: `${pct}%` }} />
+        </div>
+        <p className="loader-pct">{pct}%</p>
+      </div>
+    </div>
+  );
 }
 
 export function Experience() {
@@ -149,14 +167,7 @@ export function Experience() {
         <Scene />
       </div>
       <Labels />
-      <div className={`loader${sceneReady ? " done" : ""}`} aria-hidden={sceneReady}>
-        <div className="loader-inner">
-          <p className="loader-name">{"Setting up the desk"}</p>
-          <div className="loader-bar">
-            <span />
-          </div>
-        </div>
-      </div>
+      <Loader done={sceneReady} />
       <Nav section={section} />
       <p className={`hint${introDone && !section ? " show" : ""}`}>
         {touch ? "Tap anything on the desk — or open the menu" : "Click anything on the desk · press ⌘K to jump anywhere"}

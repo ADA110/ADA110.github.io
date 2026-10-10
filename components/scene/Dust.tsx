@@ -44,9 +44,9 @@ export function Dust({ count = 110 }) {
       const h = Math.random();
       const r = Math.sqrt(Math.random()) * (0.03 + h * 0.17);
       const a = Math.random() * Math.PI * 2;
-      pos[i * 3] = -0.36 + Math.cos(a) * r + h * 0.16;
-      pos[i * 3 + 1] = 1.22 - h * 0.44;
-      pos[i * 3 + 2] = -0.1 + Math.sin(a) * r + h * 0.15;
+      pos[i * 3] = -0.53 + Math.cos(a) * r + h * 0.4;
+      pos[i * 3 + 1] = 1.4 - h * 0.62;
+      pos[i * 3 + 2] = -0.32 + Math.sin(a) * r + h * 0.38;
       seed[i] = Math.random();
     }
     g.setAttribute("position", new THREE.BufferAttribute(pos, 3));

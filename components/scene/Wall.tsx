@@ -10,6 +10,7 @@ import { playPrinter } from "@/lib/sound";
 import { cork, cssVar, paint, paintedTexture, wrapText } from "@/lib/textures";
 import { Cable } from "./helpers";
 import { Hotspot } from "./Hotspot";
+import { useScanned } from "./pbr";
 import { ROOM } from "./Room";
 
 const WALL = ROOM.back;
@@ -181,8 +182,8 @@ function Book({ title, color, width, height, depth, position, tilt = 0 }: { titl
 
 function Bookshelf() {
   const { x, w, d, h } = SHELF;
-  const wood = paint("#e8e1d5", 0.6);
-  const woodMat = useMemo(() => new THREE.MeshStandardMaterial({ ...wood, roughness: 1 }), [wood]);
+  const oak = useScanned("white_oak_veneer", [1, 2], Math.PI / 2);
+  const woodMat = useMemo(() => new THREE.MeshStandardMaterial({ ...oak }), [oak]);
   const z = WALL + d / 2;
   const t = 0.022;
   const shelfYs = SHELF_YS;

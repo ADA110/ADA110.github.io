@@ -34,7 +34,7 @@ export const site = {
       title: "This Website",
       year: "2026",
       blurb:
-        "A real-time 3D desk built with React Three Fiber. Every object is modeled in code — procedural wood, cork, plaster and paper textures, soft shadows, a time-of-day sky, and synthesized sound.",
+        "A real-time 3D room built with React Three Fiber: photo-scanned models and materials mixed with objects modeled in code, soft shadows, a sky driven by live Palo Alto weather, and synthesized sound.",
       tags: ["Three.js", "R3F", "GLSL", "Next.js"],
       links: [{ label: "Source", href: "https://github.com/" }],
       color: "#3b6cf6",

@@ -157,17 +157,13 @@ kbd {
 .loader-bar span {
   display: block;
   height: 100%;
-  width: 40%;
   background: #ffcf9a;
-  animation: load 1.1s ease-in-out infinite;
+  transition: width 0.3s ease;
 }
-@keyframes load {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(260%);
-  }
+.loader-pct {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.75rem;
+  opacity: 0.5;
 }
 
 /* ---------- nav ---------- */

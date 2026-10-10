@@ -4,7 +4,8 @@ import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { floorPlanks, plaster, rug, paint } from "@/lib/textures";
+import { paint } from "@/lib/textures";
+import { useScanned } from "./pbr";
 import { lightning, liveSky, skyState } from "@/lib/sky";
 import { useStore } from "@/lib/store";
 
@@ -20,15 +21,13 @@ export const ROOM = {
 
 const WALL_T = 0.14;
 
+/** Scanned plaster, tinted a warm white. Tiles every ~1.6 m along the wall's long side. */
 function Wall({ size, position }: { size: [number, number, number]; position: [number, number, number] }) {
-  const tex = plaster();
-  const mat = useMemo(() => {
-    const m = new THREE.MeshStandardMaterial({ ...tex, roughness: 1, normalScale: new THREE.Vector2(0.4, 0.4) });
-    return m;
-  }, [tex]);
+  const tex = useScanned("plastered_wall_04", [Math.max(size[0], size[2]) / 1.6, size[1] / 1.6]);
   return (
-    <mesh position={position} material={mat} receiveShadow castShadow>
+    <mesh position={position} receiveShadow castShadow>
       <boxGeometry args={size} />
+      <meshStandardMaterial normalMap={tex.normalMap} roughnessMap={tex.roughnessMap} color="#f4ede3" normalScale={new THREE.Vector2(0.7, 0.7)} />
     </mesh>
   );
 }
@@ -258,13 +257,13 @@ function Sky() {
 }
 
 export function Room() {
-  const floor = floorPlanks();
-  const rugTex = rug();
   const { z0, z1, y0, y1 } = ROOM.window;
   const lx = ROOM.left - WALL_T / 2;
   const depth = ROOM.front - ROOM.back;
   const zMid = (ROOM.front + ROOM.back) / 2;
   const width = ROOM.right - ROOM.left;
+  const floor = useScanned("wood_floor", [width / 2.2, depth / 2.2]);
+  const rugTex = useScanned("poly_wool_herringbone", [2.2 / 0.7, 1.5 / 0.7]);
   const xMid = (ROOM.right + ROOM.left) / 2;
   const H = ROOM.height;
   const baseboard = paint("#f4f1ea", 0.5);
@@ -274,11 +273,11 @@ export function Room() {
       {/* floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[xMid, 0, zMid]} receiveShadow>
         <planeGeometry args={[width, depth]} />
-        <meshStandardMaterial {...floor} roughness={1} normalScale={new THREE.Vector2(0.6, 0.6)} />
+        <meshStandardMaterial {...floor} />
       </mesh>
       {/* rug */}
       <RoundedBox args={[2.2, 0.012, 1.5]} radius={0.005} position={[0.15, 0.006, 0.55]} receiveShadow>
-        <meshStandardMaterial {...rugTex} roughness={1} />
+        <meshStandardMaterial {...rugTex} color="#e8e0d4" />
       </RoundedBox>
       {/* ceiling */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[xMid, H, zMid]}>

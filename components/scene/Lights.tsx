@@ -1,6 +1,6 @@
 "use client";
 
-import { Environment, Lightformer } from "@react-three/drei";
+import { Environment } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
@@ -49,7 +49,7 @@ export function Lights() {
     const l = lampLevel.current;
     if (hemi.current) hemi.current.intensity = sky.ambient + l * 0.22 + lightning.value * 1.6;
     // Reflections dim with the room: brighter by day and with the lamp on.
-    scene.environmentIntensity = 0.12 + sky.day * 0.45 + l * 0.3;
+    scene.environmentIntensity = 0.1 + sky.day * 0.38 + l * 0.22;
   });
 
   // Sun (or moon) comes in through the window on the left wall.
@@ -86,15 +86,8 @@ export function Lights() {
         color="#b9c6ff"
         intensity={2.2}
       />
-      {/* Studio-free environment for reflections: built from soft panels, no HDRI download. */}
-      <Environment resolution={256} frames={1}>
-        <color attach="background" args={["#1c1a18"]} />
-        <Lightformer form="rect" intensity={2.2} color="#ffe2c0" position={[0, 3, 0]} rotation-x={Math.PI / 2} scale={[4, 4, 1]} />
-        <Lightformer form="rect" intensity={3} color="#dce8ff" position={[-4, 1.6, 0.2]} rotation-y={Math.PI / 2} scale={[1.5, 1.6, 1]} />
-        <Lightformer form="rect" intensity={0.6} color="#f2e6d8" position={[0, 1.4, -3]} scale={[6, 3, 1]} />
-        <Lightformer form="rect" intensity={0.6} color="#f2e6d8" position={[0, 1.4, 4]} rotation-y={Math.PI} scale={[6, 3, 1]} />
-        <Lightformer form="rect" intensity={0.4} color="#d8cbb8" position={[4, 1.4, 0]} rotation-y={-Math.PI / 2} scale={[6, 3, 1]} />
-      </Environment>
+      {/* Reflections from a real, photographed room (Poly Haven "small_empty_room_1", CC0). */}
+      <Environment files="/env/room.hdr" environmentRotation={[0, Math.PI / 2, 0]} />
     </>
   );
 }

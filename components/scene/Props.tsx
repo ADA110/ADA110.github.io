@@ -6,10 +6,11 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { site } from "@/content/site";
 import { useStore } from "@/lib/store";
-import { cssVar, paintedTexture, roundRect, terracotta } from "@/lib/textures";
+import { cssVar, paintedTexture, roundRect } from "@/lib/textures";
 import { placeClock } from "@/lib/weather";
 import { DESK } from "./Desk";
 import { useLathe } from "./helpers";
+import { cloneScanned, useModel, useShadowClone, withArtwork } from "./pbr";
 import { Hotspot } from "./Hotspot";
 
 const T = DESK.top;
@@ -96,102 +97,6 @@ function Mug() {
         <meshPhysicalMaterial color="#2b170b" roughness={0.08} clearcoat={1} />
       </mesh>
       <Steam />
-    </group>
-  );
-}
-
-// ---------------- Snake plant ----------------
-
-function leafGeometry() {
-  const g = new THREE.PlaneGeometry(1, 1, 2, 12);
-  const p = g.attributes.position as THREE.BufferAttribute;
-  for (let i = 0; i < p.count; i++) {
-    const x = p.getX(i);
-    const t = p.getY(i) + 0.5; // 0 at base, 1 at tip
-    const width = Math.pow(Math.sin(Math.min(1, t * 1.15) * Math.PI * 0.92 + 0.25), 0.8) * (1 - Math.pow(t, 4));
-    // V-shaped cross-section gives the leaf a crease.
-    p.setXYZ(i, x * width, t, -Math.abs(x) * 0.25 * width + t * t * 0.18);
-  }
-  g.computeVertexNormals();
-  return g;
-}
-
-function Plant() {
-  const geom = useMemo(leafGeometry, []);
-  const leafTex = useMemo(
-    () =>
-      paintedTexture(128, 512, (ctx, w, h) => {
-        ctx.fillStyle = "#2f5a2c";
-        ctx.fillRect(0, 0, w, h);
-        for (let y = 0; y < h; y += 6) {
-          const wave = Math.sin(y * 0.09) * 10 + Math.sin(y * 0.031) * 18;
-          ctx.fillStyle = `rgba(${150 + (y % 30)}, ${190 + (y % 20)}, 120, ${0.25 + ((y * 7) % 13) / 60})`;
-          ctx.fillRect(0, y + wave * 0.1, w, 2 + (y % 3));
-        }
-        ctx.fillStyle = "#c8b84f";
-        ctx.fillRect(0, 0, 9, h);
-        ctx.fillRect(w - 9, 0, 9, h);
-      }).tex,
-    [],
-  );
-  const leaves = useMemo(
-    () =>
-      Array.from({ length: 11 }, (_, i) => {
-        const a = (i / 11) * Math.PI * 2 + (i % 3) * 0.3;
-        return {
-          rotY: a,
-          tilt: 0.08 + (i % 4) * 0.06,
-          h: 0.22 + ((i * 37) % 11) / 11 * 0.16,
-          w: 0.034 + (i % 3) * 0.006,
-          r: 0.012 + (i % 2) * 0.012,
-          phase: i * 1.7,
-        };
-      }),
-    [],
-  );
-  const group = useRef<THREE.Group>(null);
-  useFrame((s) => {
-    if (!group.current || useStore.getState().reducedMotion) return;
-    group.current.children.forEach((c, i) => {
-      c.rotation.z = Math.sin(s.clock.elapsedTime * 0.8 + leaves[i].phase) * 0.012;
-    });
-  });
-  const pot = useLathe([
-    [0.0, 0.0],
-    [0.04, 0.0],
-    [0.043, 0.004],
-    [0.05, 0.085],
-    [0.056, 0.088],
-    [0.056, 0.104],
-    [0.05, 0.106],
-    [0.047, 0.1],
-  ]);
-  const terra = terracotta();
-  return (
-    <group position={[-0.47, T, -0.4]}>
-      <mesh geometry={pot} castShadow receiveShadow>
-        <meshStandardMaterial {...terra} roughness={1} side={THREE.DoubleSide} />
-      </mesh>
-      <mesh position={[0, 0.094, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <circleGeometry args={[0.048, 32]} />
-        <meshStandardMaterial color="#2a1d14" roughness={1} />
-      </mesh>
-      <group ref={group} position={[0, 0.09, 0]}>
-        {leaves.map((l, i) => (
-          <group key={i} rotation={[0, l.rotY, 0]}>
-            <mesh
-              geometry={geom}
-              position={[l.r, 0, 0]}
-              rotation={[l.tilt, 0, 0]}
-              scale={[l.w, l.h, 0.06]}
-              castShadow
-              receiveShadow
-            >
-              <meshStandardMaterial map={leafTex} roughness={0.45} side={THREE.DoubleSide} />
-            </mesh>
-          </group>
-        ))}
-      </group>
     </group>
   );
 }
@@ -315,67 +220,52 @@ function Phone() {
   );
 }
 
-// ---------------- Picture frame ----------------
+// ---------------- Plants (Poly Haven scans) ----------------
+
+/** Haworthia succulent in a white pot on the desk. */
+function DeskPlant() {
+  const { scene } = useModel("potted_plant_04");
+  const plant = useShadowClone(scene);
+  return <primitive object={plant} position={[-0.47, T, -0.4]} rotation={[0, 0.6, 0]} />;
+}
+
+/** Arrowhead plant in a terracotta pot, on the floor under the window. */
+function FloorPlant() {
+  const { scene } = useModel("potted_plant_02");
+  const plant = useShadowClone(scene);
+  return <primitive object={plant} position={[-1.22, 0, 0.72]} rotation={[0, 2.2, 0]} scale={0.95} />;
+}
+
+// ---------------- Picture frame (Poly Haven scan, our own print inside) ----------------
 
 function PictureFrame() {
-  const photo = useMemo(
-    () =>
-      paintedTexture(400, 520, (ctx, w, h) => {
-        ctx.fillStyle = "#f3efe6";
-        ctx.fillRect(0, 0, w, h);
-        // inner print
-        const g = ctx.createLinearGradient(0, 40, 0, h - 40);
-        g.addColorStop(0, "#284b8f");
-        g.addColorStop(1, "#d9643a");
-        ctx.fillStyle = g;
-        ctx.fillRect(40, 40, w - 80, h - 80);
-        ctx.fillStyle = "rgba(255,255,255,0.95)";
-        ctx.textAlign = "center";
-        ctx.font = `400 150px ${cssVar("--font-serif", "serif")}`;
-        ctx.fillText(site.initials, w / 2, h / 2 + 50);
-        ctx.font = `400 22px ${cssVar("--font-geist-sans", "sans-serif")}`;
-        ctx.fillText("photo coming soon", w / 2, h - 80);
-      }),
-    [],
+  const { scene } = useModel("standing_picture_frame_01");
+  const photo = useMemo(() => {
+    const p = paintedTexture(400, 560, (ctx, w, h) => {
+      ctx.fillStyle = "#f3efe6";
+      ctx.fillRect(0, 0, w, h);
+      const g = ctx.createLinearGradient(0, 40, 0, h - 40);
+      g.addColorStop(0, "#284b8f");
+      g.addColorStop(1, "#d9643a");
+      ctx.fillStyle = g;
+      ctx.fillRect(40, 40, w - 80, h - 80);
+      ctx.fillStyle = "rgba(255,255,255,0.95)";
+      ctx.textAlign = "center";
+      ctx.font = `400 150px ${cssVar("--font-serif", "serif")}`;
+      ctx.fillText(site.initials, w / 2, h / 2 + 50);
+      ctx.font = `400 22px ${cssVar("--font-geist-sans", "sans-serif")}`;
+      ctx.fillText("photo coming soon", w / 2, h - 80);
+    });
+    p.tex.flipY = false; // glTF UV convention
+    return p;
+  }, []);
+  const frame = useMemo(
+    () => cloneScanned(scene, (mesh) => (mesh.material = withArtwork(mesh.material, "standing_picture_frame_01_artwork", photo.tex))),
+    [scene, photo],
   );
-  const W = 0.13;
-  const H = 0.17;
-  const D = 0.016;
-  const b = 0.014;
-  const wood = { color: "#2a1a10", roughness: 0.45, metalness: 0 } as const;
   return (
     <Hotspot id="about" labelPosition={[0.38, T + 0.01, -0.27]}>
-      <group position={[0.4, T, -0.38]} rotation={[0, -0.32, 0]}>
-        <group position={[0, H / 2 + 0.002, 0]} rotation={[-0.16, 0, 0]}>
-          {[
-            [0, H / 2 - b / 2, W, b],
-            [0, -H / 2 + b / 2, W, b],
-            [W / 2 - b / 2, 0, b, H],
-            [-W / 2 + b / 2, 0, b, H],
-          ].map(([x, y, w, h], i) => (
-            <RoundedBox key={i} args={[w, h, D]} radius={0.002} position={[x, y, 0]} castShadow receiveShadow>
-              <meshStandardMaterial {...wood} />
-            </RoundedBox>
-          ))}
-          <mesh position={[0, 0, -0.002]}>
-            <planeGeometry args={[W - b * 2 + 0.002, H - b * 2 + 0.002]} />
-            <meshStandardMaterial map={photo.tex} roughness={0.8} />
-          </mesh>
-          <mesh position={[0, 0, 0.004]}>
-            <planeGeometry args={[W - b * 2, H - b * 2]} />
-            <meshPhysicalMaterial transparent opacity={0.1} roughness={0.03} depthWrite={false} />
-          </mesh>
-          {/* back panel + easel */}
-          <mesh position={[0, 0, -0.007]}>
-            <boxGeometry args={[W - 0.004, H - 0.004, 0.003]} />
-            <meshStandardMaterial color="#3b2a1d" roughness={0.9} />
-          </mesh>
-          <mesh position={[0, -0.02, -0.04]} rotation={[0.45, 0, 0]} castShadow>
-            <boxGeometry args={[0.03, 0.12, 0.004]} />
-            <meshStandardMaterial color="#3b2a1d" roughness={0.9} />
-          </mesh>
-        </group>
-      </group>
+      <primitive object={frame} position={[0.4, T, -0.39]} rotation={[0, -Math.PI / 2 - 0.32, 0]} scale={0.85} />
     </Hotspot>
   );
 }
@@ -384,7 +274,8 @@ export function Props() {
   return (
     <>
       <Mug />
-      <Plant />
+      <DeskPlant />
+      <FloorPlant />
       <Headphones />
       <Phone />
       <PictureFrame />

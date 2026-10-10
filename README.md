@@ -28,9 +28,15 @@ corkboard cards, book spines, the monitor's project grid, and the phone notifica
 ## How it's built
 
 - Next.js (App Router) + React Three Fiber + drei + postprocessing.
-- **No downloaded assets.** Every object is modeled in code (`components/scene/`), and wood, floor,
-  plaster, cork, felt and terracotta textures are generated procedurally with normal and roughness maps
-  (`lib/textures.ts`). Sounds are synthesized with WebAudio (`lib/sound.ts`).
+- **Photo-scanned assets** from [Poly Haven](https://polyhaven.com) (CC0): the lamp, plants, picture frames,
+  lantern, notebook and stationery (`public/models/`), the walnut, oak, plaster, wool, leather and linen
+  materials (`public/textures/`), and the `small_empty_room_1` HDRI used for reflections (`public/env/`).
+  Everything else — monitor, keyboard, headphones, phone, printer, books, gear — is modeled in code
+  (`components/scene/`). Sounds are synthesized with WebAudio (`lib/sound.ts`).
+- **Asset pipeline:** models are compressed with glTF Transform (meshopt geometry, WebP textures):
+  `npx gltf-transform optimize in.gltf public/models/out.glb --compress meshopt --texture-compress webp --texture-size 1024 --join false --flatten false`.
+  Textures: `node scripts/compress-textures.mjs <dir>`. Inspect a model's parts with `node scripts/inspect-gltf.mjs` / `scripts/prim-bounds.mjs`.
+- Debug any camera framing with `?cam=x,y,z,targetX,targetY,targetZ`.
 - Lighting: lamp spotlight with soft (PCSS) shadows, sunlight through the window that follows the
   visitor's local time, monitor glow (RectAreaLight), and a procedural environment for reflections.
   Post: N8AO ambient occlusion, bloom, vignette, film grain, AgX tone mapping.

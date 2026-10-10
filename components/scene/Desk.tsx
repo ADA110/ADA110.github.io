@@ -4,8 +4,9 @@ import { RoundedBox } from "@react-three/drei";
 import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
-import { deskWood, felt } from "@/lib/textures";
+import { cssVar, paintedTexture } from "@/lib/textures";
 import { Cable } from "./helpers";
+import { useModel, useScanned } from "./pbr";
 
 export const DESK = { top: 0.75, width: 1.6, depth: 0.75, z: -0.16, thickness: 0.035 };
 
@@ -55,24 +56,61 @@ const ROWS: number[][] = [
   [1.25, 1.25, 1.25, 6.25, 1.25, 1.25, 1.25, 1.25],
 ];
 
+// Printed legends, one per key (gaps in the function row are skipped).
+const LEGENDS: string[][] = [
+  ["esc", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"],
+  ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "delete"],
+  ["tab", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "[", "]", "\\"],
+  ["caps", "A", "S", "D", "F", "G", "H", "J", "K", "L", ";", "'", "return"],
+  ["shift", "Z", "X", "C", "V", "B", "N", "M", ",", ".", "/", "shift"],
+  ["ctrl", "opt", "cmd", "", "cmd", "opt", "fn", "ctrl"],
+];
+
 function Keyboard() {
   const U = 0.019;
   const keys = useMemo(() => {
-    const out: { x: number; z: number; w: number; mod: boolean }[] = [];
+    const out: { x: number; z: number; w: number; mod: boolean; label: string }[] = [];
     ROWS.forEach((row, r) => {
       let x = 0;
+      let n = 0;
       const z = r * U + (r === 0 ? -0.004 : 0);
       row.forEach((w, i) => {
         if (w < 0.6 && r === 0 && i > 0) {
           x += w * U;
           return;
         }
-        out.push({ x: x + (w * U) / 2, z, w, mod: w > 1.2 || (r === 0 && i === 0) || (r === 5) });
+        out.push({ x: x + (w * U) / 2, z, w, mod: w > 1.2 || (r === 0 && i === 0) || r === 5, label: LEGENDS[r][n++] ?? "" });
         x += w * U;
       });
     });
     return out;
   }, []);
+  // Legends are painted onto one transparent sheet laid exactly over the key tops.
+  const sheet = useMemo(() => {
+    const W = 15 * U + 0.004;
+    const zMin = -2.5 * U - 0.004 - U / 2;
+    const D = 6 * U + 0.006;
+    const px = 2048 / W;
+    const py = 1024 / D; // power-of-two canvas; text is squashed back to square below
+    const t = paintedTexture(2048, 1024, (ctx) => {
+      const sans = cssVar("--font-geist-sans", "sans-serif");
+      ctx.textBaseline = "top";
+      for (const k of keys) {
+        if (!k.label) continue;
+        const kx = (k.x - (15 * U) / 2 + W / 2 - (k.w * U) / 2 + 0.0034) * px;
+        const kz = (k.z - 2.5 * U - zMin - U / 2 + 0.003) * py;
+        const single = k.label.length === 1;
+        ctx.save();
+        ctx.translate(kx, kz);
+        ctx.scale(1, py / px);
+        ctx.font = `600 ${single ? 56 : 30}px ${sans}`;
+        ctx.fillStyle = k.mod ? "rgba(250,250,250,0.95)" : "rgba(30,30,34,0.95)";
+        ctx.fillText(k.label, 0, 0);
+        ctx.restore();
+      }
+    });
+    return { tex: t.tex, W, D, zc: zMin + D / 2 };
+  }, [keys]);
   const rowWidth = 15 * U;
   const mesh = useRef<THREE.InstancedMesh>(null);
   const geometry = useMemo(() => new RoundedBoxGeometry(1, 1, 1, 2, 0.18), []);
@@ -104,6 +142,10 @@ function Keyboard() {
         <instancedMesh ref={mesh} args={[geometry, undefined, keys.length]} position={[0, 0.021, 0]} castShadow receiveShadow>
           <meshStandardMaterial roughness={0.62} />
         </instancedMesh>
+        <mesh position={[0, 0.0252, sheet.zc]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={2}>
+          <planeGeometry args={[sheet.W, sheet.D]} />
+          <meshStandardMaterial map={sheet.tex} transparent depthWrite={false} roughness={0.6} polygonOffset polygonOffsetFactor={-2} />
+        </mesh>
       </group>
     </group>
   );
@@ -133,58 +175,90 @@ function Mouse() {
   );
 }
 
+/** A scanned object's child node, re-centred on its own bounding box so it can be placed directly. */
+function useNode(scene: THREE.Object3D, name: string) {
+  return useMemo(() => {
+    const src = scene.getObjectByName(name);
+    const obj = (src ?? new THREE.Group()).clone(true);
+    obj.position.set(0, 0, 0);
+    obj.traverse((o) => {
+      o.castShadow = true;
+      o.receiveShadow = true;
+    });
+    const box = new THREE.Box3().setFromObject(obj);
+    const c = box.getCenter(new THREE.Vector3());
+    obj.position.sub(c);
+    const g = new THREE.Group();
+    g.add(obj);
+    return { object: g, size: box.getSize(new THREE.Vector3()) };
+  }, [scene, name]);
+}
+
+/** Leather notebook + a pen (Poly Haven "binder_notebook" / "stationery_supplies"). */
 function Notebook() {
+  const { scene } = useModel("binder_notebook");
+  const book = useNode(scene, "binder_notebook_closed");
+  const { scene: st } = useModel("stationery_supplies");
+  const pen = useNode(st, "stationery_supplies_pen_fancy");
   return (
-    <group position={[-0.56, DESK.top, 0.02]} rotation={[0, 0.28, 0]}>
-      <RoundedBox args={[0.148, 0.014, 0.21]} radius={0.004} position={[0, 0.007, 0]} castShadow receiveShadow>
-        <meshStandardMaterial color="#20324a" roughness={0.8} />
-      </RoundedBox>
-      {/* page edges */}
-      <mesh position={[0.002, 0.007, 0]}>
-        <boxGeometry args={[0.144, 0.01, 0.204]} />
-        <meshStandardMaterial color="#f1ece0" roughness={0.9} />
-      </mesh>
-      {/* elastic band */}
-      <mesh position={[0.05, 0.007, 0]}>
-        <boxGeometry args={[0.006, 0.0152, 0.2105]} />
-        <meshStandardMaterial color="#111" roughness={0.6} />
-      </mesh>
-      {/* pen */}
-      <group position={[0.1, 0.006, -0.01]} rotation={[0, 0.15, Math.PI / 2]}>
-        <mesh rotation={[0, 0, 0]} castShadow>
-          <cylinderGeometry args={[0.0045, 0.0045, 0.13, 16]} />
-          <meshStandardMaterial color="#111" roughness={0.3} metalness={0.4} />
-        </mesh>
-        <mesh position={[0, 0.07, 0]} castShadow>
-          <coneGeometry args={[0.0045, 0.014, 16]} />
-          <meshStandardMaterial color="#c9a45c" roughness={0.25} metalness={1} />
-        </mesh>
-        <mesh position={[0.004, -0.03, 0]} castShadow>
-          <boxGeometry args={[0.002, 0.04, 0.003]} />
-          <meshStandardMaterial color="#c9a45c" roughness={0.25} metalness={1} />
-        </mesh>
-      </group>
+    <group>
+      <primitive object={book.object} position={[-0.56, DESK.top + book.size.y / 2, 0.02]} rotation={[0, 0.28 + Math.PI / 2, 0]} />
+      <primitive object={pen.object} position={[-0.445, DESK.top + pen.size.y / 2, 0.0]} rotation={[0, 1.35, 0]} />
+    </group>
+  );
+}
+
+/** Metal pencil cup with a few pens and pencils standing in it. */
+function PenCup() {
+  const { scene } = useModel("stationery_supplies");
+  const cup = useNode(scene, "stationery_supplies_pencilcup");
+  const pens = [
+    useNode(scene, "stationery_supplies_pencil_new_a"),
+    useNode(scene, "stationery_supplies_pen_blue"),
+    useNode(scene, "stationery_supplies_pen_red"),
+    useNode(scene, "stationery_supplies_pencil_used"),
+  ];
+  // [x, z, lean about x, lean about z]
+  const slots: [number, number, number, number][] = [
+    [-0.012, -0.01, -0.12, 0.1],
+    [0.013, -0.008, -0.08, -0.14],
+    [0.0, 0.014, 0.14, 0.05],
+    [-0.01, 0.01, 0.1, 0.16],
+  ];
+  return (
+    <group position={[-0.69, DESK.top, -0.2]}>
+      <primitive object={cup.object} position={[0, cup.size.y / 2, 0]} />
+      {pens.map((p, i) => {
+        const [x, z, rx, rz] = slots[i];
+        const len = p.size.x;
+        return (
+          <group key={i} position={[x, 0.006, z]} rotation={[rx, i * 1.3, rz]}>
+            <primitive object={p.object} position={[0, len / 2, 0]} rotation={[0, 0, Math.PI / 2]} />
+          </group>
+        );
+      })}
     </group>
   );
 }
 
 export function Desk() {
-  const wood = deskWood();
-  const mat = felt("#2c2e33");
+  const wood = useScanned("walnut_veneer", [1, 0.47], Math.PI / 2);
+  const mat = useScanned("rough_linen", [4, 1.8]);
   const { top, width, depth, z, thickness } = DESK;
   return (
     <group>
       <RoundedBox args={[width, thickness, depth]} radius={0.006} smoothness={3} position={[0, top - thickness / 2, z]} castShadow receiveShadow>
-        <meshPhysicalMaterial {...wood} roughness={1} clearcoat={0.35} clearcoatRoughness={0.35} normalScale={new THREE.Vector2(0.5, 0.5)} />
+        <meshPhysicalMaterial {...wood} color="#9c7458" clearcoat={0.4} clearcoatRoughness={0.3} />
       </RoundedBox>
       <Legs />
       {/* desk mat */}
       <RoundedBox args={[0.92, 0.003, 0.4]} radius={0.0014} position={[0.02, top + 0.0015, 0.03]} receiveShadow>
-        <meshStandardMaterial {...mat} roughness={1} />
+        <meshStandardMaterial normalMap={mat.normalMap} roughnessMap={mat.roughnessMap} color="#26282c" />
       </RoundedBox>
       <Keyboard />
       <Mouse />
       <Notebook />
+      <PenCup />
       {/* keyboard cable to the back */}
       <Cable
         points={[
