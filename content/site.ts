@@ -1,6 +1,5 @@
 // All site copy lives here. Edit this file to update the website;
 // the 3D scene (corkboard cards, book spines, monitor, phone) reads from it too.
-// Everything below is PLACEHOLDER content until the real resume is dropped in.
 
 import type { IconName } from "@/lib/icons";
 
@@ -22,13 +21,13 @@ export const site = {
   about: {
     paragraphs: [
       "Hi, I'm Abhi. This is my desk, or at least a very convincing digital twin of one. Everything here is clickable, and every section is also one tap away in the menu.",
-      "I like working where engineering meets craft: systems that are fast and reliable, and interfaces that feel good to use. (Placeholder bio: the real one is coming soon.)",
+      "I like working where engineering meets business: building systems that are scalable and reliable, with interfaces and functionality that make the user experience better.",
     ],
     facts: [
       { label: "Based in", value: "Stanford, CA" },
-      { label: "Focus", value: "Full-stack · Graphics · AI" },
-      { label: "Currently", value: "Building this website" },
-      { label: "Fuel", value: "Too much coffee" },
+      { label: "Focus", value: "AI product" },
+      { label: "Currently", value: "Finishing my MBA" },
+      { label: "Fuel", value: "Coupa Café coffee" },
     ],
   },
 

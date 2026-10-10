@@ -300,7 +300,7 @@ export const SECTION_INTRO: Record<SectionId, { title: string; kicker: string }>
   resume: { title: "Resume", kicker: "The printer" },
   music: { title: "Now playing", kicker: "The headphones" },
   outdoors: { title: "Off the clock", kicker: "The gear corner" },
-  weather: { title: "Where I live, right now", kicker: "The wall display" },
+  weather: { title: "Where I live", kicker: "The wall display" },
   notes: { title: "Old CS notes", kicker: "The paper pile" },
 };
 
