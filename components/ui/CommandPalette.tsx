@@ -35,6 +35,13 @@ function Palette() {
           useStore.getState().toggleLamp();
         },
       },
+      {
+        id: "style",
+        label: "Switch art style",
+        hint: "Realistic / anime",
+        group: "Actions",
+        run: () => set({ artStyle: useStore.getState().artStyle === "anime" ? "realistic" : "anime" }),
+      },
       { id: "sound", label: "Toggle sound", hint: "Clicks & whooshes", group: "Actions", run: () => set({ soundOn: !useStore.getState().soundOn }) },
       { id: "email", label: "Copy email address", hint: site.email, group: "Actions", run: () => void navigator.clipboard?.writeText(site.email) },
       { id: "pdf", label: "Download resume", hint: "PDF", group: "Actions", run: () => window.open(site.resumeUrl, "_blank") },

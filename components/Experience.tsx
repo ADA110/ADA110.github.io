@@ -107,6 +107,8 @@ export function Experience() {
       soundOn: read("desk:sound") !== "off",
       introDone: !webgl,
       lampOn: !webgl ? read("desk:lamp") !== "off" : false,
+      // `?style=anime` (or the ⌘K menu) switches the art style; remembered per browser.
+      artStyle: (new URLSearchParams(location.search).get("style") ?? read("desk:style")) === "anime" ? "anime" : "realistic",
     });
   }, [set]);
 
@@ -128,6 +130,8 @@ export function Experience() {
     if (introDone) write("desk:lamp", lampOn ? "on" : "off");
   }, [lampOn, introDone]);
   useEffect(() => write("desk:sound", soundOn ? "on" : "off"), [soundOn]);
+  const artStyle = useStore((s) => s.artStyle);
+  useEffect(() => write("desk:style", artStyle), [artStyle]);
 
   // Keyboard: ⌘K palette, Esc back, ←/→ between sections, L for the lamp.
   useEffect(() => {

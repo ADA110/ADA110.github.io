@@ -3,10 +3,23 @@
 import { Bloom, EffectComposer, N8AO, Noise, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { BlendFunction, ToneMappingMode } from "postprocessing";
 import { useStore } from "@/lib/store";
+import { AnimeGrade, Ink } from "./anime/effects";
 
 export function Effects() {
   const quality = useStore((s) => s.quality);
+  const anime = useStore((s) => s.artStyle === "anime");
   const high = quality === "high";
+  if (anime) {
+    return (
+      <EffectComposer multisampling={high ? 4 : 0} enableNormalPass>
+        <Ink />
+        <Bloom mipmapBlur intensity={0.85} luminanceThreshold={0.72} luminanceSmoothing={0.3} radius={0.8} />
+        <AnimeGrade />
+        <Vignette offset={0.3} darkness={0.35} />
+        <ToneMapping mode={ToneMappingMode.NEUTRAL} />
+      </EffectComposer>
+    );
+  }
   return (
     <EffectComposer multisampling={high ? 4 : 0} enableNormalPass={false}>
       {high ? (

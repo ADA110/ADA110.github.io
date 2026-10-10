@@ -48,7 +48,10 @@ export function Lights() {
     const lampOn = useStore.getState().lampOn;
     lampLevel.current += ((lampOn ? 1 : 0) - lampLevel.current) * (1 - Math.exp(-6 * dt));
     const l = lampLevel.current;
-    if (hemi.current) hemi.current.intensity = sky.ambient + l * 0.22 + lightning.value * 1.6;
+    const anime = useStore.getState().artStyle === "anime";
+    const fill = anime ? 2.4 : 1;
+    if (sun.current) sun.current.intensity = sky.sunIntensity * (anime ? 0.7 : 1);
+    if (hemi.current) hemi.current.intensity = (sky.ambient + l * 0.22) * fill + lightning.value * 1.6;
     // Reflections dim with the room: brighter by day and with the lamp on.
     scene.environmentIntensity = 0.1 + sky.day * 0.38 + l * 0.22;
   });
