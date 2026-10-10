@@ -79,10 +79,10 @@ export const site = {
       bullets: ["MBA candidate, Class of 2027."],
     },
     {
-      role: "Applied AI Product Manager",
+      role: "Applied AI Product Manager Intern",
       company: "Google Cloud",
       dates: "Jun — Sep 2026",
-      bullets: ["Product manager on applied AI in Google Cloud for the summer."],
+      bullets: ["Summer product management internship on applied AI in Google Cloud."],
     },
     {
       role: "Software Engineer",
@@ -92,11 +92,11 @@ export const site = {
       bullets: ["Software engineer focused on AI and data."],
     },
     {
-      role: "EECS + Business, M.E.T. Program",
+      role: "Bachelor's, EECS + Business (M.E.T.)",
       company: "UC Berkeley",
       dates: "2017 — 2021",
       location: "Berkeley, CA",
-      bullets: ["Management, Entrepreneurship & Technology (M.E.T.): electrical engineering & computer sciences plus business."],
+      bullets: ["Bachelor's degree through the Management, Entrepreneurship & Technology (M.E.T.) program: electrical engineering & computer sciences plus business."],
     },
   ] as { role: string; company: string; short?: string; dates?: string; location?: string; bullets: string[] }[],
 
