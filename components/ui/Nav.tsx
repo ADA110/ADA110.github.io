@@ -43,7 +43,7 @@ export function Nav({ section }: { section: SectionId | null }) {
 
   return (
     <header className="nav">
-      <Link href="/" scroll={false} className="brand" aria-label={`${site.name} — back to the desk`}>
+      <Link href="/" scroll={false} className="brand" aria-label={`${site.name}, back to the desk`}>
         <span className="brand-name">{site.name}</span>
       </Link>
 

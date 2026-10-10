@@ -13,8 +13,7 @@ A personal website that is a hand-painted, anime-style 3D desk. Click an object 
 | Headphones | Music on repeat | `/music` |
 | Wall display | Live Palo Alto time + weather, with sky previews | `/weather` |
 | Gear corner (paddle, pack, boots) | Outdoors / hobbies | `/outdoors` |
-| Lamp | Light / dark mode | — |
-| Chair | Click it for a spin | — |
+| Lamp | Light / dark mode | |
 
 Everything is also reachable from the nav bar, the ⌘K menu, ←/→ keys, and a text-only version (in the ⌘K menu).
 

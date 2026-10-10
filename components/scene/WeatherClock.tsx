@@ -169,7 +169,7 @@ function drawDisplay(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.fillText(`Feels like ${weather.feelsF}°`, w - 34, 392);
 }
 
-/** A slim wall display showing Palo Alto's live time and weather — the window outside matches it. */
+/** A slim wall display showing Palo Alto's live time and weather; the window outside matches it. */
 export function WeatherClock() {
   const weather = useStore((s) => s.weather);
   const preview = useStore((s) => s.preview);

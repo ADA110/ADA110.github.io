@@ -49,7 +49,7 @@ export function Cable({ points, radius = 0.0028, color = "#141414" }: { points: 
   );
 }
 
-/** Revolve a 2D profile (x = radius, y = height) into a solid — mugs, pots, shades. */
+/** Revolve a 2D profile (x = radius, y = height) into a solid: mugs, pots, shades. */
 export function useLathe(profile: [number, number][], segments = 64) {
   const key = JSON.stringify(profile);
   return useMemo(

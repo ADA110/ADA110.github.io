@@ -11,7 +11,7 @@ const PANEL_WIDTH = 460;
 const SHEET_FRACTION = 0.56;
 export const DESKTOP_MIN = 820;
 
-/** `?cam=x,y,z,tx,ty,tz` overrides the overview camera — handy for framing and close-up checks. */
+/** `?cam=x,y,z,tx,ty,tz` overrides the overview camera, handy for framing and close-up checks. */
 function debugCamera() {
   if (typeof window === "undefined") return null;
   const v = new URLSearchParams(window.location.search).get("cam")?.split(",").map(Number);

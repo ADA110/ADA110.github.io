@@ -59,7 +59,7 @@ function Window() {
       ))}
       {/* sill */}
       <RoundedBox args={[0.2, 0.035, w + 0.12]} radius={0.008} position={[ROOM.left + 0.04, y0 - 0.015, zc]} castShadow receiveShadow material={frameMat} />
-      {/* glass — faint reflection only so the view stays clear */}
+      {/* glass: faint reflection only, so the view stays clear */}
       <mesh position={[x, yc, zc]} rotation={[0, Math.PI / 2, 0]}>
         <planeGeometry args={[w, h]} />
         <meshPhysicalMaterial transparent opacity={0.08} roughness={0.02} metalness={0} envMapIntensity={1.5} depthWrite={false} side={THREE.DoubleSide} />

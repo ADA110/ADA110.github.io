@@ -1,4 +1,4 @@
-// All site copy lives here. Edit this file to update the website —
+// All site copy lives here. Edit this file to update the website;
 // the 3D scene (corkboard cards, book spines, monitor, phone) reads from it too.
 // Everything below is PLACEHOLDER content until the real resume is dropped in.
 
@@ -6,7 +6,7 @@ export const site = {
   name: "Abhi Ashar",
   initials: "AA",
   photo: { square: "/images/profile-square.webp", portrait: "/images/profile-portrait.webp" },
-  tagline: "I build thoughtful software — and the occasional 3D desk.",
+  tagline: "I build thoughtful software, and the occasional 3D desk.",
   location: "Stanford, CA",
   email: "hello@example.com",
   resumeUrl: "/resume.pdf",
@@ -19,8 +19,8 @@ export const site = {
 
   about: {
     paragraphs: [
-      "Hi, I'm Abhi. This is my desk — or at least a very convincing digital twin of one. Everything here is clickable, and every section is also one tap away in the menu.",
-      "I like working where engineering meets craft: systems that are fast and reliable, and interfaces that feel good to use. (Placeholder bio — the real one is coming soon.)",
+      "Hi, I'm Abhi. This is my desk, or at least a very convincing digital twin of one. Everything here is clickable, and every section is also one tap away in the menu.",
+      "I like working where engineering meets craft: systems that are fast and reliable, and interfaces that feel good to use. (Placeholder bio: the real one is coming soon.)",
     ],
     facts: [
       { label: "Based in", value: "Stanford, CA" },
@@ -44,7 +44,7 @@ export const site = {
       title: "Project Two",
       year: "2025",
       blurb:
-        "Placeholder project. Describe the problem, what you built, and the impact — numbers are great (e.g. cut latency 40%, 10k users).",
+        "Placeholder project. Describe the problem, what you built, and the impact. Numbers are great (e.g. cut latency 40%, 10k users).",
       tags: ["TypeScript", "Postgres", "AWS"],
       links: [{ label: "Live", href: "https://example.com" }],
       color: "#e2683c",
@@ -75,27 +75,27 @@ export const site = {
       role: "MBA",
       company: "Stanford Graduate School of Business",
       short: "Stanford GSB", // fits the corkboard card
-      dates: "2025 — Present",
+      dates: "2025 – Present",
       location: "Stanford, CA",
       bullets: ["MBA candidate, Class of 2027."],
     },
     {
       role: "Applied AI Product Manager Intern",
       company: "Google Cloud",
-      dates: "Jun — Sep 2026",
+      dates: "Jun – Sep 2026",
       bullets: ["Summer product management internship on applied AI in Google Cloud."],
     },
     {
       role: "Software Engineer",
       company: "Amazon",
-      dates: "2021 — 2025",
+      dates: "2021 – 2025",
       location: "Seattle, WA",
       bullets: ["Software engineer focused on AI and data."],
     },
     {
       role: "Bachelor's, EECS + Business (M.E.T.)",
       company: "UC Berkeley",
-      dates: "2017 — 2021",
+      dates: "2017 – 2021",
       location: "Berkeley, CA",
       bullets: ["Bachelor's degree through the Management, Entrepreneurship & Technology (M.E.T.) program: electrical engineering & computer sciences plus business."],
     },
@@ -127,7 +127,7 @@ export const site = {
     activities: [
       { name: "Camping", emoji: "🏕️", note: "Placeholder: favorite campground or best trip." },
       { name: "Hiking", emoji: "🥾", note: "Placeholder: a trail you love, or a summit you're proud of." },
-      { name: "Kayaking", emoji: "🛶", note: "Placeholder: where you paddle — bay, lakes, coast?" },
+      { name: "Kayaking", emoji: "🛶", note: "Placeholder: where you paddle (bay, lakes, coast?)" },
     ],
     bucketList: ["Placeholder: a dream trip", "Placeholder: a big summit", "Placeholder: a multi-day paddle"],
   },

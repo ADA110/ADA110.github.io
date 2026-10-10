@@ -22,7 +22,7 @@ const CODE: [string, string][][] = [
   [["key", "  status"], ["op", ": "], ["str", '"open to cool problems"'], ["op", ","]],
   [["op", "};"]],
   [],
-  [["com", "// psst — click the things on the desk"]],
+  [["com", "// psst: click the things on the desk"]],
   [["kw", "export default "], ["fn", "render"], ["op", "("], ["var", "me"], ["op", ");"]],
 ];
 const COLORS: Record<string, string> = {
@@ -111,7 +111,7 @@ function drawProjects(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.fillText("Projects", 48, 76);
   ctx.fillStyle = "#777";
   ctx.font = `400 18px ${sans}`;
-  ctx.fillText(`${site.projects.length} things I've built — details in the panel →`, 50, 108);
+  ctx.fillText(`${site.projects.length} things I've built. Details in the panel →`, 50, 108);
   const cols = 2;
   const pad = 48;
   const gap = 24;

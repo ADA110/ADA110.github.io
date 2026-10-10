@@ -33,16 +33,15 @@ function About() {
       <a className="card offclock" href="/outdoors" onClick={(e) => goTo(e, "outdoors")}>
         <span aria-hidden>🏕️</span>
         <span>
-          <strong>Off the clock</strong>
-          <span className="muted"> — {site.outdoors.activities.map((a) => a.name.toLowerCase()).join(", ")}</span>
+          <strong>Off the clock:</strong>{" "}
+          <span className="muted">{site.outdoors.activities.map((a) => a.name.toLowerCase()).join(", ")}</span>
         </span>
         <span aria-hidden>→</span>
       </a>
       <a className="card offclock" href="/notes" onClick={(e) => goTo(e, "notes")}>
         <span aria-hidden>📄</span>
         <span>
-          <strong>Throwback</strong>
-          <span className="muted"> — my 2019 CS 61A & 61B study notes</span>
+          <strong>Throwback:</strong> <span className="muted">my 2019 CS 61A & 61B study notes</span>
         </span>
         <span aria-hidden>→</span>
       </a>
@@ -151,6 +150,13 @@ function Projects() {
 function Experience() {
   return (
     <div className="stack">
+      <a className="card offclock" href={site.linkedin} target="_blank" rel="noreferrer">
+        <span aria-hidden>in</span>
+        <span>
+          <strong>The full story:</strong> <span className="muted">all my experience on LinkedIn</span>
+        </span>
+        <span aria-hidden>↗</span>
+      </a>
       <ol className="timeline">
         {site.experience.map((job) => (
           <li key={job.role + job.company}>
@@ -166,14 +172,6 @@ function Experience() {
           </li>
         ))}
       </ol>
-      <a className="card offclock" href={site.linkedin} target="_blank" rel="noreferrer">
-        <span aria-hidden>in</span>
-        <span>
-          <strong>The full story</strong>
-          <span className="muted"> — all my experience on LinkedIn</span>
-        </span>
-        <span aria-hidden>↗</span>
-      </a>
     </div>
   );
 }
@@ -181,7 +179,7 @@ function Experience() {
 function Skills() {
   return (
     <div className="stack">
-      <p className="muted">Each one is a book on the shelf — hover the spines.</p>
+      <p className="muted">Each one is a book on the shelf. Hover the spines.</p>
       {site.skills.map((g) => (
         <section key={g.group}>
           <h3 className="eyebrow">{g.group}</h3>
@@ -255,7 +253,7 @@ function Music() {
             <span className="muted">{String(i + 1).padStart(2, "0")}</span>
             <span>
               {t.title}
-              <span className="muted"> — {t.artist}</span>
+              <span className="muted"> · {t.artist}</span>
             </span>
           </li>
         ))}

@@ -22,7 +22,7 @@ export function useScanned(name: ScannedMaterial, repeat: [number, number] = [1,
   }, [diff, repeat[0], repeat[1], rotation]); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
-/** Scanned 3D models (meshopt-compressed GLB) — the decoder ships with three, no CDN needed. */
+/** Scanned 3D models (meshopt-compressed GLB). The decoder ships with three, no CDN needed. */
 export function useModel(name: string) {
   return useGLTF(modelUrl(name), false, true);
 }

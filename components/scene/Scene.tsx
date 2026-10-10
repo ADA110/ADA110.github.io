@@ -45,7 +45,7 @@ export default function Scene() {
         if (section) go(null);
       }}
     >
-      {/* Only judge frame rate once loading is over — startup work would read as a slow device. */}
+      {/* Only judge frame rate once loading is over; startup work would read as a slow device. */}
       {sceneReady && <PerformanceMonitor onDecline={() => useStore.getState().set({ quality: "low" })} />}
       <Suspense fallback={null}>
         <Room />

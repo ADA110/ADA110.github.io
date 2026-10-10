@@ -173,7 +173,7 @@ export function Experience() {
       <Loader done={sceneReady} />
       <Nav section={section} />
       <p className={`hint${introDone && !section ? " show" : ""}`}>
-        {touch ? "Tap anything on the desk — or open the menu" : "Click anything on the desk · press ⌘K to jump anywhere"}
+        {touch ? "Tap anything on the desk, or open the menu" : "Click anything on the desk · press ⌘K to jump anywhere"}
       </p>
       <Panel section={section} />
       {previewing && section !== "weather" && (
