@@ -10,6 +10,8 @@ import { useStore } from "@/lib/store";
 const PANEL_WIDTH = 460;
 const SHEET_FRACTION = 0.56;
 export const DESKTOP_MIN = 820;
+/** tan of the half-angle the portrait overview needs horizontally to fit the room's width. */
+const PORTRAIT_FIT = 0.5;
 
 /** `?cam=x,y,z,tx,ty,tz` overrides the overview camera, handy for framing and close-up checks. */
 function debugCamera() {
@@ -47,8 +49,13 @@ export function CameraRig() {
     desiredTgt.current.set(...pose.target);
     desiredPos.current.set(...pose.position);
     // Tall screens: widen the lens; narrow-ish screens: back the camera off along its view line.
-    const fov = portrait ? 60 : 40;
-    if (camera.fov !== fov) {
+    // The portrait overview widens until the whole room (window to bookshelf) fits across the screen.
+    const fov = portrait
+      ? s
+        ? 60
+        : Math.min(100, Math.max(60, THREE.MathUtils.radToDeg(2 * Math.atan(PORTRAIT_FIT / aspect))))
+      : 40;
+    if (Math.abs(camera.fov - fov) > 0.01) {
       camera.fov = fov;
       camera.updateProjectionMatrix();
     }

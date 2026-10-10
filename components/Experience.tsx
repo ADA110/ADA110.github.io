@@ -99,14 +99,17 @@ export function Experience() {
   useEffect(() => {
     const c = document.createElement("canvas");
     const webgl = !!(c.getContext("webgl2") || c.getContext("webgl"));
+    // Phones open on the text version (the desk is still one tap away); tablets and laptops get the desk.
+    const phone = matchMedia("(pointer: coarse)").matches && Math.min(screen.width, screen.height) < 600;
     set({
       webgl,
-      textMode: !webgl,
+      textMode: !webgl || phone,
       reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches,
       touch: matchMedia("(pointer: coarse)").matches,
       soundOn: read("desk:sound") !== "off",
       introDone: !webgl,
-      lampOn: !webgl ? read("desk:lamp") !== "off" : false,
+      // The desk starts dark and the intro clicks the lamp on; the text version uses the saved theme directly.
+      lampOn: !webgl || phone ? read("desk:lamp") !== "off" : false,
     });
   }, [set]);
 

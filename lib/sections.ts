@@ -26,10 +26,10 @@ export const HOME_CAMERA = {
   target: [0.05, 0.98, -0.2] as Vec3,
 };
 
-/** Tall phone screens get a more frontal, centred view of the desk. */
+/** Tall phone screens look straight at the back wall from the far side of the room, so the whole room fits. */
 export const HOME_CAMERA_PORTRAIT = {
-  position: [0.5, 1.75, 3.4] as Vec3,
-  target: [0.3, 1.12, -0.2] as Vec3,
+  position: [0.28, 1.5, 3.45] as Vec3,
+  target: [0.28, 1.05, -0.56] as Vec3,
 };
 
 export const SECTIONS: Section[] = [
