@@ -36,7 +36,13 @@ function Palette() {
         },
       },
       { id: "sound", label: "Toggle sound", hint: "Clicks & whooshes", group: "Actions", run: () => set({ soundOn: !useStore.getState().soundOn }) },
-      { id: "email", label: "Copy email address", hint: site.email, group: "Actions", run: () => void navigator.clipboard?.writeText(site.email) },
+      ...site.emails.map((email, i) => ({
+        id: `email-${i}`,
+        label: "Copy email address",
+        hint: email,
+        group: "Actions",
+        run: () => void navigator.clipboard?.writeText(email),
+      })),
       { id: "pdf", label: "Download resume", hint: "PDF", group: "Actions", run: () => window.open(site.resumeUrl, "_blank") },
       { id: "text", label: "Text-only version", hint: "No 3D, just the content", group: "Actions", run: () => set({ textMode: true }) },
     ];

@@ -281,7 +281,7 @@ function Printer() {
         ctx.fillText(site.name, 34, 60);
         ctx.fillStyle = "#666";
         ctx.font = `400 16px ${cssVar("--font-geist-sans", "sans-serif")}`;
-        ctx.fillText(site.email, 34, 86);
+        ctx.fillText(site.emails[0], 34, 86);
         ctx.fillStyle = "#ccc";
         for (let i = 0; i < 14; i++) {
           const y = 128 + i * 28 + Math.floor(i / 4) * 16;

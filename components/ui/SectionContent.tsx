@@ -204,28 +204,36 @@ function Skills() {
   );
 }
 
-function Contact() {
+function EmailRow({ email }: { email: string }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(site.email);
+      await navigator.clipboard.writeText(email);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {
-      window.location.href = `mailto:${site.email}`;
+      window.location.href = `mailto:${email}`;
     }
   };
   return (
+    <div className="email-row">
+      <a href={`mailto:${email}`} className="email">
+        {email}
+      </a>
+      <button className="btn" onClick={copy} aria-label={`Copy ${email}`}>
+        {copied ? "Copied ✓" : "Copy"}
+      </button>
+    </div>
+  );
+}
+
+function Contact() {
+  return (
     <div className="stack">
-      <p>The fastest way to reach me is email. I read everything.</p>
-      <div className="email-row">
-        <a href={`mailto:${site.email}`} className="email">
-          {site.email}
-        </a>
-        <button className="btn" onClick={copy}>
-          {copied ? "Copied ✓" : "Copy"}
-        </button>
-      </div>
+      <p>The fastest way to reach me is email. Either address works, and I read everything.</p>
+      {site.emails.map((e) => (
+        <EmailRow key={e} email={e} />
+      ))}
       <ul className="socials">
         {site.socials.map((s) => (
           <li key={s.label}>

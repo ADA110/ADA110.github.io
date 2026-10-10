@@ -10,13 +10,12 @@ export const site = {
   photo: { square: "/images/profile-square.webp", portrait: "/images/profile-portrait.webp" },
   tagline: "I build thoughtful software, and the occasional 3D desk.",
   location: "Stanford, CA",
-  email: "hello@example.com",
+  emails: ["aashar@stanford.edu", "abhinav.ashar2@gmail.com"],
   resumeUrl: "/resume.pdf",
   linkedin: "https://www.linkedin.com/in/abhinavashar/",
   socials: [
-    { label: "GitHub", href: "https://github.com/" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/abhinavashar/" },
-    { label: "X / Twitter", href: "https://x.com/" },
+    { label: "GitHub", href: "https://github.com/ADA110" },
   ],
 
   about: {
@@ -34,7 +33,7 @@ export const site = {
 
   projects: [
     {
-      title: "This Website",
+      title: "Personal Website",
       icon: "cube",
       year: "2026",
       blurb:
@@ -112,22 +111,23 @@ export const site = {
     { role: "Born in Mumbai", company: "Mumbai, India", dates: "Until 2002" },
   ] as { role: string; company: string; short?: string; dates?: string; location?: string; bullets?: string[] }[],
 
+  // From the resume. One shelf of books per group on the bookshelf.
   skills: [
     {
-      group: "Languages",
-      items: ["TypeScript", "Python", "Go", "SQL", "GLSL"],
+      group: "Programming",
+      items: ["Java", "Python", "Kotlin"],
     },
     {
-      group: "Frontend",
-      items: ["React", "Next.js", "Three.js", "WebGL"],
+      group: "AI & Machine Learning",
+      items: ["LLMs", "Generative AI", "AI Agents", "MCP Servers", "Model Evals", "Loss Pattern Analysis", "Machine Learning"],
     },
     {
-      group: "Backend & Infra",
-      items: ["Node.js", "Postgres", "Docker", "AWS"],
+      group: "Data & Cloud",
+      items: ["Data Processing", "Cloud Computing", "Evals & A/B Testing"],
     },
     {
-      group: "AI / Data",
-      items: ["PyTorch", "LLM apps", "Pandas"],
+      group: "Product",
+      items: ["Product Design", "Roadmapping", "Customer Adoption", "Team Management", "Cross-Functional Communication", "Stakeholder Management"],
     },
   ],
 
