@@ -13,6 +13,7 @@ export const site = {
   emails: ["aashar@stanford.edu", "abhinav.ashar2@gmail.com"],
   resumeUrl: "/resume.pdf",
   linkedin: "https://www.linkedin.com/in/abhinavashar/",
+  github: "https://github.com/ADA110",
   socials: [
     { label: "LinkedIn", href: "https://www.linkedin.com/in/abhinavashar/" },
     { label: "GitHub", href: "https://github.com/ADA110" },
