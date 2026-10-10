@@ -264,6 +264,21 @@ kbd {
 .only-mobile {
   display: none;
 }
+.only-narrow {
+  display: none;
+}
+/* Small laptops: shorten the top-bar buttons so the section links and actions don't collide. */
+@media (max-width: 1100px) {
+  .only-wide {
+    display: none;
+  }
+  .only-narrow {
+    display: inline;
+  }
+  .nav-links a {
+    padding: 7px 10px;
+  }
+}
 
 .hint {
   position: absolute;

@@ -26,10 +26,10 @@ export const HOME_CAMERA = {
   target: [0.05, 0.98, -0.2] as Vec3,
 };
 
-/** Tall phone screens look straight at the back wall from the far side of the room, so the whole room fits. */
+/** Tall phone screens look across the room from the front-right corner, so the window and the whole desk wall fit. */
 export const HOME_CAMERA_PORTRAIT = {
-  position: [0.28, 1.5, 3.45] as Vec3,
-  target: [0.28, 1.05, -0.56] as Vec3,
+  position: [2.0, 1.45, 2.8] as Vec3,
+  target: [0.3, 1.05, -0.3] as Vec3,
 };
 
 export const SECTIONS: Section[] = [

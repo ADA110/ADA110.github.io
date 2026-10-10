@@ -23,6 +23,14 @@ export function BulbIcon({ on }: { on: boolean }) {
   );
 }
 
+function TextIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden>
+      <path d="M5 6h14M5 10h14M5 14h10M5 18h7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function SoundIcon({ on }: { on: boolean }) {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>
@@ -56,8 +64,13 @@ export function Nav({ section }: { section: SectionId | null }) {
       </nav>
 
       <div className="nav-actions">
+        <button className="kbd-btn" onClick={() => set({ textMode: true })} aria-label="Switch to the text-only version" title="Text-only version">
+          <TextIcon />
+          <span className="only-wide">Text version</span>
+          <span className="only-narrow">Text</span>
+        </button>
         <button className="kbd-btn" onClick={() => set({ paletteOpen: true })} aria-label="Open menu (Command K)">
-          <span className="only-desktop">Jump to</span>
+          <span className="only-wide">Jump to</span>
           <span className="only-mobile">Menu</span>
           <kbd className="only-desktop">⌘K</kbd>
         </button>
