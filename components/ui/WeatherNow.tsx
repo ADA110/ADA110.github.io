@@ -44,7 +44,7 @@ export function WeatherNow() {
     <div className="stack">
       <div className="card weather-hero">
         <div>
-          <p className="eyebrow">Live · Palo Alto, CA</p>
+          <p className="eyebrow">Live · Where I live</p>
           <p className="weather-time">
             {clock.time} <span>{clock.ampm}</span>
           </p>
@@ -83,8 +83,7 @@ export function WeatherNow() {
         </dl>
       )}
       <p className="muted small">
-        The window, the sunlight on the desk and this display all follow the real time and weather in Palo Alto, where I
-        live. Data from Open-Meteo, refreshed every 10 minutes.
+        The window, the sunlight on the desk and this display all follow the real time and weather where I live. Data from Open-Meteo, refreshed every 10 minutes.
       </p>
 
       <section className="stack preview-box">

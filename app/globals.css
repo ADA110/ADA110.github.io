@@ -398,11 +398,10 @@ kbd {
   align-items: flex-end;
   padding: 14px 16px;
 }
-.project-art span {
-  font-family: var(--font-serif), serif;
-  font-size: 3rem;
-  line-height: 1;
-  color: rgba(255, 255, 255, 0.9);
+.project-art svg {
+  width: 46px;
+  height: 46px;
+  color: rgba(255, 255, 255, 0.92);
 }
 .project-body {
   padding: 14px 16px 16px;

@@ -12,7 +12,7 @@ const OBJECT_LABELS: Record<string, string> = {
   resume: "Resume",
   music: "Now playing",
   outdoors: "Outdoors",
-  weather: "Palo Alto · live",
+  weather: "Where I live",
   notes: "Old CS notes",
 };
 

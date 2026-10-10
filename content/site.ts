@@ -2,6 +2,8 @@
 // the 3D scene (corkboard cards, book spines, monitor, phone) reads from it too.
 // Everything below is PLACEHOLDER content until the real resume is dropped in.
 
+import type { IconName } from "@/lib/icons";
+
 export const site = {
   name: "Abhi Ashar",
   initials: "AA",
@@ -32,28 +34,18 @@ export const site = {
 
   projects: [
     {
-      title: "GSB Housing",
-      year: "2026",
-      blurb:
-        "A housing board for Stanford GSB MBA students to find sublets and connect with classmates looking for a place. Sign-in is verified with a Stanford email code, and the API is rate-limited and covered by tests.",
-      tags: ["React", "Express", "Postgres", "Vercel"],
-      links: [
-        { label: "Live", href: "https://gsb-housing.vercel.app" },
-        { label: "Code", href: "https://github.com/ADA110/gsb_housing" },
-      ],
-      color: "#8c1515",
-    },
-    {
       title: "This Website",
+      icon: "cube",
       year: "2026",
       blurb:
-        "A hand-painted, Ghibli-style 3D room built with React Three Fiber: cel shading and line art drawn in real time, a sky driven by live Palo Alto weather, and synthesized sound.",
+        "A hand-painted, Ghibli-style 3D room built with React Three Fiber: cel shading and line art drawn in real time, a sky that follows the real weather where I live, and synthesized sound.",
       tags: ["Three.js", "R3F", "GLSL", "Next.js"],
       links: [{ label: "Code", href: "https://github.com/ADA110/ADA110.github.io" }],
       color: "#3b6cf6",
     },
     {
       title: "Agents Workshop",
+      icon: "bot",
       year: "2026",
       blurb:
         "A hands-on workshop that teaches multi-agent AI. Students build a Claude Code team (a manager plus Researcher, Writer and Editor agents) that drafts a real cold email, guided step by step by this site, with an instructor console that tracks everyone's progress.",
@@ -65,7 +57,21 @@ export const site = {
       color: "#e2683c",
     },
     {
+      title: "GSB Housing",
+      icon: "house",
+      year: "2026",
+      blurb:
+        "A housing board for Stanford GSB MBA students to find sublets and connect with classmates looking for a place. Sign-in is verified with a Stanford email code, and the API is rate-limited and covered by tests.",
+      tags: ["React", "Express", "Postgres", "Vercel"],
+      links: [
+        { label: "Live", href: "https://gsb-housing.vercel.app" },
+        { label: "Code", href: "https://github.com/ADA110/gsb_housing" },
+      ],
+      color: "#8c1515",
+    },
+    {
       title: "Canvas MCP",
+      icon: "cap",
       year: "2026",
       blurb:
         "An MCP server that connects Claude to Canvas, so you can ask about your courses, assignments, modules, announcements and upcoming due dates in plain English.",
@@ -73,7 +79,7 @@ export const site = {
       links: [{ label: "Code", href: "https://github.com/ADA110/canvas-mcp" }],
       color: "#16a37f",
     },
-  ],
+  ] as { title: string; icon: IconName; year: string; blurb: string; tags: string[]; links: { label: string; href: string }[]; color: string }[],
 
   // Newest first. `dates` and `location` are both optional; whichever exist are shown together.
   // `short` is an optional shorter name for the corkboard cards.
@@ -123,7 +129,7 @@ export const site = {
     },
   ],
 
-  // The gear corner: paddle, pack, boots and trail map.
+  // The gear corner: paddle, pack, boots and a Seattle print.
   outdoors: {
     intro:
       "I'm from Seattle, and I really love nature. The Pacific Northwest is where I learned to camp, hike and kayak, and these are some of the places that captured my heart.",

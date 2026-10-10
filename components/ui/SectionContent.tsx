@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { site } from "@/content/site";
+import { ICONS } from "@/lib/icons";
 import { WeatherNow } from "./WeatherNow";
 import type { SectionId } from "@/lib/sections";
 import { useStore } from "@/lib/store";
@@ -121,7 +122,11 @@ function Projects() {
       {site.projects.map((p) => (
         <article key={p.title} className="card project">
           <div className="project-art" style={{ "--c": p.color } as React.CSSProperties}>
-            <span>{p.title.charAt(0)}</span>
+            <svg viewBox="0 0 24 24" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              {ICONS[p.icon].map((d) => (
+                <path key={d} d={d} />
+              ))}
+            </svg>
           </div>
           <div className="project-body">
             <header>
@@ -238,7 +243,7 @@ function Resume() {
   return (
     <div className="stack">
       <p>Hot off the printer. The one-page version of everything on this desk.</p>
-      <a className="btn primary big" href={site.resumeUrl} download>
+      <a className="btn primary big" href={site.resumeUrl} download="Abhi Ashar Resume.pdf">
         Download resume (PDF)
       </a>
       <a className="text-link" href={site.resumeUrl} target="_blank" rel="noreferrer">
@@ -276,7 +281,7 @@ export const SECTION_INTRO: Record<SectionId, { title: string; kicker: string }>
   resume: { title: "Resume", kicker: "The printer" },
   music: { title: "Now playing", kicker: "The headphones" },
   outdoors: { title: "Off the clock", kicker: "The gear corner" },
-  weather: { title: "Palo Alto, right now", kicker: "The wall display" },
+  weather: { title: "Where I live, right now", kicker: "The wall display" },
   notes: { title: "Old CS notes", kicker: "The paper pile" },
 };
 

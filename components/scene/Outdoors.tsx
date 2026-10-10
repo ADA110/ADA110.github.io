@@ -4,7 +4,6 @@ import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { site } from "@/content/site";
 import { useStore } from "@/lib/store";
 import { cssVar, paintedTexture } from "@/lib/textures";
 import { Hotspot } from "./Hotspot";
@@ -161,63 +160,143 @@ function Boot({ position, rotation }: { position: [number, number, number]; rota
   );
 }
 
-// ---------------- topographic trail map on the wall ----------------
+// ---------------- painted Seattle skyline on the wall (Kerry Park view: Space Needle, downtown, Rainier) ----------------
 
-function TrailMap() {
+function SeattlePrint() {
   const map = useMemo(
     () =>
-      paintedTexture(420, 622, (ctx, w, h) => {
-        // contour lines from a smooth height field
-        const img = ctx.createImageData(w, h);
-        const n = (x: number, y: number) =>
-          Math.sin(x * 0.013 + Math.sin(y * 0.011) * 1.7) * 0.35 +
-          Math.sin(y * 0.017 + Math.cos(x * 0.009) * 2.1) * 0.35 +
-          Math.sin((x + y) * 0.006) * 0.3;
-        for (let y = 0; y < h; y++) {
-          for (let x = 0; x < w; x++) {
-            const v = n(x, y);
-            const i = (y * w + x) * 4;
-            let r = 241, g = 234, b = 216;
-            if (v < -0.55) [r, g, b] = [173, 205, 222]; // lake
-            else if (v > 0.15) [r, g, b] = [222, 228, 200]; // forest tint
-            const level = (v + 1) * 14;
-            const f = Math.abs(level - Math.round(level));
-            const major = Math.round(level) % 5 === 0;
-            if (f < (major ? 0.09 : 0.05) && v >= -0.55) [r, g, b] = major ? [150, 104, 70] : [190, 150, 115];
-            img.data[i] = r;
-            img.data[i + 1] = g;
-            img.data[i + 2] = b;
-            img.data[i + 3] = 255;
-          }
+      // The frame's artwork UVs only use u 0.165 to 0.835, so the canvas is wider than the print
+      // and the 420×622 painting is centred in the part that shows.
+      paintedTexture(626, 622, (ctx, W, h) => {
+        const w = 420;
+        ctx.save(); // redrawn once fonts load, so the offset must not accumulate
+        ctx.translate((W - w) / 2, 0);
+        const horizon = 432;
+        const art = h - 74;
+        // sky
+        const sky = ctx.createLinearGradient(0, 0, 0, horizon);
+        sky.addColorStop(0, "#7fa9d6");
+        sky.addColorStop(0.55, "#b9cfe6");
+        sky.addColorStop(1, "#f4d9bd");
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, w, horizon);
+        // soft cumulus
+        ctx.fillStyle = "rgba(255,255,255,0.85)";
+        for (const [cx, cy, r] of [
+          [60, 92, 26], [92, 80, 32], [128, 94, 24], [300, 60, 22], [330, 50, 30], [366, 62, 22], [250, 150, 16], [272, 144, 20],
+        ]) {
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.fill();
         }
-        ctx.putImageData(img, 0, 0);
-        // trail
-        ctx.strokeStyle = "#d1342a";
-        ctx.lineWidth = 4;
-        ctx.setLineDash([12, 8]);
+        // Mount Rainier
+        ctx.fillStyle = "#a9b4d4";
         ctx.beginPath();
-        ctx.moveTo(40, 470);
-        ctx.bezierCurveTo(120, 420, 90, 330, 190, 300);
-        ctx.bezierCurveTo(290, 270, 250, 170, 340, 110);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = "#d1342a";
-        ctx.beginPath();
-        ctx.moveTo(340, 92);
-        ctx.lineTo(352, 116);
-        ctx.lineTo(328, 116);
+        ctx.moveTo(110, horizon);
+        ctx.bezierCurveTo(200, 360, 250, 260, 296, 246);
+        ctx.bezierCurveTo(334, 258, 390, 350, 470, horizon);
         ctx.fill();
+        ctx.fillStyle = "#f7f6fb";
+        ctx.beginPath();
+        ctx.moveTo(240, 300);
+        ctx.bezierCurveTo(262, 270, 280, 252, 296, 246);
+        ctx.bezierCurveTo(318, 254, 340, 280, 356, 306);
+        ctx.lineTo(340, 300);
+        ctx.lineTo(326, 316);
+        ctx.lineTo(310, 298);
+        ctx.lineTo(294, 318);
+        ctx.lineTo(278, 300);
+        ctx.lineTo(262, 314);
+        ctx.closePath();
+        ctx.fill();
+        // downtown towers
+        let seed = 7;
+        const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+        const towers: [number, number, number, string][] = [
+          [150, 22, 372, "#6f7fa3"], [170, 18, 352, "#61719a"], [186, 26, 330, "#7486ab"], [210, 20, 300, "#566690"],
+          [228, 30, 268, "#4b5a82"], [256, 22, 316, "#6a7aa1"], [276, 26, 290, "#5d6d96"], [300, 20, 338, "#7383a8"],
+          [318, 28, 306, "#56658e"], [344, 22, 350, "#6c7ca2"], [364, 30, 366, "#5f6f97"], [392, 28, 384, "#7081a6"],
+        ];
+        for (const [x, bw, top, c] of towers) {
+          ctx.fillStyle = c;
+          ctx.fillRect(x, top, bw, horizon - top);
+          ctx.fillStyle = "rgba(255,255,255,0.12)";
+          ctx.fillRect(x, top, bw * 0.35, horizon - top);
+          ctx.fillStyle = "rgba(255,236,180,0.75)";
+          for (let wy = top + 8; wy < horizon - 6; wy += 9)
+            for (let wx = x + 4; wx < x + bw - 4; wx += 6) if (rand() < 0.22) ctx.fillRect(wx, wy, 2.5, 3.5);
+        }
+        // Space Needle
+        const nx = 104;
+        ctx.fillStyle = "#c8c2b8";
+        ctx.beginPath();
+        ctx.moveTo(nx - 38, horizon + 4);
+        ctx.quadraticCurveTo(nx - 6, 300, nx - 18, 190);
+        ctx.lineTo(nx + 18, 190);
+        ctx.quadraticCurveTo(nx + 6, 300, nx + 38, horizon + 4);
+        ctx.lineTo(nx + 22, horizon + 4);
+        ctx.quadraticCurveTo(nx + 2, 320, nx, 300);
+        ctx.quadraticCurveTo(nx - 2, 320, nx - 22, horizon + 4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#eee9e0";
+        ctx.fillRect(nx - 3, 190, 6, horizon - 186);
+        // elevator core highlight and the halo ring
+        ctx.strokeStyle = "#eee9e0";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.ellipse(nx, 318, 12, 3, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        // saucer: observation deck, roof, spire
+        ctx.fillStyle = "#d9d2c6";
+        ctx.beginPath();
+        ctx.ellipse(nx, 182, 50, 11, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#f4efe6";
+        ctx.beginPath();
+        ctx.ellipse(nx, 176, 46, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#e3a548";
+        ctx.beginPath();
+        ctx.moveTo(nx - 40, 172);
+        ctx.quadraticCurveTo(nx, 146, nx + 40, 172);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#d9d2c6";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(nx, 156);
+        ctx.lineTo(nx, 74);
+        ctx.stroke();
+        // Elliott Bay
+        const bay = ctx.createLinearGradient(0, horizon, 0, art);
+        bay.addColorStop(0, "#7e9fc4");
+        bay.addColorStop(1, "#3e5d86");
+        ctx.fillStyle = bay;
+        ctx.fillRect(0, horizon, w, art - horizon);
+        ctx.fillStyle = "rgba(255,240,210,0.45)";
+        for (let i = 0; i < 26; i++) ctx.fillRect(140 + rand() * 260, horizon + 6 + rand() * 90, 10 + rand() * 26, 2);
+        // Kerry Park evergreens framing the bottom corners
+        ctx.fillStyle = "#2f4a3a";
+        for (const [tx, ty, tw] of [[-10, 470, 60], [30, 500, 48], [370, 480, 56], [404, 456, 50]]) {
+          ctx.beginPath();
+          ctx.moveTo(tx, art);
+          ctx.lineTo(tx + tw / 2, ty);
+          ctx.lineTo(tx + tw, art);
+          ctx.fill();
+        }
         // title block
-        ctx.fillStyle = "rgba(241,234,216,0.92)";
-        ctx.fillRect(0, h - 74, w, 74);
+        ctx.fillStyle = "rgba(241,234,216,0.94)";
+        ctx.fillRect(0, art, w, 74);
         ctx.fillStyle = "#3a2a1e";
         ctx.font = `400 34px ${cssVar("--font-serif", "serif")}`;
-        ctx.fillText("Out There", 22, h - 32);
+        ctx.fillText("Seattle", 22, h - 32);
         ctx.font = `500 13px ${cssVar("--font-geist-mono", "monospace")}`;
         ctx.fillStyle = "#7a6650";
-        ctx.fillText("48.71° N · 121.13° W", 22, h - 12);
+        ctx.fillText("47.62° N · 122.35° W", 22, h - 12);
         ctx.textAlign = "right";
-        ctx.fillText(site.outdoors.activities.map((a) => a.name).join(" · ").toUpperCase(), w - 22, h - 12);
+        ctx.fillText("HOMETOWN", w - 22, h - 12);
+        ctx.restore();
       }),
     [],
   );
@@ -265,7 +344,7 @@ export function Outdoors() {
         <Backpack />
         <Boot position={[-1.17, 0, -0.14]} rotation={Math.PI + 0.35} />
         <Boot position={[-0.99, 0, -0.1]} rotation={Math.PI - 0.12} />
-        <TrailMap />
+        <SeattlePrint />
       </Hotspot>
       <Lantern />
     </>

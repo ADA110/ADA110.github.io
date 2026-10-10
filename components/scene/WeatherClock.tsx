@@ -7,7 +7,7 @@ import * as THREE from "three";
 import { useStore } from "@/lib/store";
 import { cssVar, paintedTexture } from "@/lib/textures";
 import { liveSky } from "@/lib/sky";
-import { PLACE, conditionLabel, conditionOf, formatHour, placeClock, type Condition } from "@/lib/weather";
+import { conditionLabel, conditionOf, formatHour, placeClock, type Condition } from "@/lib/weather";
 import { Hotspot } from "./Hotspot";
 import { ROOM } from "./Room";
 
@@ -119,7 +119,7 @@ function drawDisplay(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.fillStyle = "#8a93a3";
   ctx.font = `600 20px ${sans}`;
   ctx.textAlign = "left";
-  ctx.fillText(PLACE.name.toUpperCase(), 34, 46);
+  ctx.fillText("WHERE I LIVE", 34, 46);
   ctx.textAlign = "right";
   ctx.fillStyle = previewing ? "#ffb347" : "#3ddc84";
   ctx.beginPath();

@@ -92,7 +92,7 @@ export const SECTIONS: Section[] = [
   },
   {
     id: "weather",
-    label: "Palo Alto now",
+    label: "Where I live",
     object: "Wall display",
     inNav: false,
     // Angled so the display and the window (the sky outside) are both in view.
