@@ -108,6 +108,8 @@ export const site = {
       dates: "2017 – 2021",
       location: "Berkeley, CA",
     },
+    { role: "Grew up in Houston", company: "Houston, TX", dates: "2002 – 2017" },
+    { role: "Born in Mumbai", company: "Mumbai, India", dates: "Until 2002" },
   ] as { role: string; company: string; short?: string; dates?: string; location?: string; bullets?: string[] }[],
 
   skills: [
