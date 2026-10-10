@@ -188,7 +188,7 @@ export function WeatherClock() {
   });
 
   return (
-    <Hotspot id="weather" labelPosition={[CLOCK.x, CLOCK.y - H / 2 - 0.05, ROOM.back + 0.05]} lift={0}>
+    <Hotspot id="weather" labelPosition={[CLOCK.x - 0.07, CLOCK.y - H / 2 - 0.05, ROOM.back + 0.05]} lift={0}>
     <group position={[CLOCK.x, CLOCK.y, ROOM.back + 0.012]}>
       <RoundedBox args={[W + 0.014, H + 0.014, 0.018]} radius={0.004} castShadow receiveShadow>
         <meshStandardMaterial color="#1c1d20" roughness={0.35} metalness={0.8} />

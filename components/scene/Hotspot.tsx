@@ -68,15 +68,45 @@ export function LabelProjector() {
   const v = useRef(new THREE.Vector3());
   useFrame((state) => {
     const { width, height } = state.size;
+    // Project every anchor first (reading label sizes before any style writes this frame).
+    const placed: { el: HTMLElement; x: number; y: number; w: number; h: number; behind: boolean }[] = [];
     for (const [id, anchor] of anchors) {
       const el = document.getElementById(`label-${id}`);
       if (!el) continue;
       v.current.copy(anchor).project(camera);
-      const behind = v.current.z > 1;
-      const x = (v.current.x * 0.5 + 0.5) * width;
-      const y = (-v.current.y * 0.5 + 0.5) * height;
-      el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translate(-50%, -50%)`;
-      el.style.visibility = behind ? "hidden" : "";
+      placed.push({
+        el,
+        x: (v.current.x * 0.5 + 0.5) * width,
+        y: (-v.current.y * 0.5 + 0.5) * height,
+        w: el.offsetWidth,
+        h: el.offsetHeight,
+        behind: v.current.z > 1,
+      });
+    }
+    // Objects close together on screen (e.g. on a phone) would stack their labels on top of
+    // each other, so nudge overlapping pairs apart vertically until they clear.
+    const gap = 8; // also covers the pill shifting a few px inside its anchor on hover
+    for (let pass = 0; pass < 6; pass++) {
+      let moved = false;
+      for (let i = 0; i < placed.length; i++) {
+        for (let j = i + 1; j < placed.length; j++) {
+          const a = placed[i];
+          const b = placed[j];
+          if (a.behind || b.behind) continue;
+          const ox = (a.w + b.w) / 2 + gap - Math.abs(a.x - b.x);
+          const oy = (a.h + b.h) / 2 + gap - Math.abs(a.y - b.y);
+          if (ox <= 0 || oy <= 0) continue;
+          const dir = a.y <= b.y ? 1 : -1;
+          a.y -= (dir * oy) / 2;
+          b.y += (dir * oy) / 2;
+          moved = true;
+        }
+      }
+      if (!moved) break;
+    }
+    for (const p of placed) {
+      p.el.style.transform = `translate3d(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px, 0) translate(-50%, -50%)`;
+      p.el.style.visibility = p.behind ? "hidden" : "";
     }
   });
   return null;

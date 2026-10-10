@@ -150,7 +150,7 @@ export const site = {
   // The stack of notes on the desk: CS 61A / 61B teaching notes from the 2019 site, kept at their original URLs.
   notes: {
     intro:
-      "When I was teaching Berkeley's CS 61A and CS 61B, I wrote these topic review notes by hand for my students and then typeset them in LaTeX. They quickly review key concepts, tips & tricks, and useful examples: not an exhaustive textbook, just the things I felt mattered most. Teaching is one of my favorite things I've done, and the notes are still here if they help you.",
+      "When I was teaching Berkeley's CS 61A and CS 61B, I wrote these topic review notes for my students myself, typing every page up in LaTeX long before AI could draft them. They quickly review key concepts, tips & tricks, and useful examples: not an exhaustive textbook, just the things I felt mattered most. Teaching is one of my favorite things I've done, and the notes are still here if they help you.",
     courses: [
       {
         code: "CS 61A",

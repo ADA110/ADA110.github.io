@@ -147,7 +147,7 @@ export function DeskNotes() {
   const n = 10;
   const top = 0.002 + n * 0.0022;
   return (
-    <Hotspot id="notes" labelPosition={[0.62, T + 0.07, -0.2]}>
+    <Hotspot id="notes" labelPosition={[0.74, T + 0.02, -0.04]}>
       <group position={[0.62, T, -0.2]} rotation={[0, -0.28, 0]}>
         {Array.from({ length: n }, (_, i) => (
           <mesh
