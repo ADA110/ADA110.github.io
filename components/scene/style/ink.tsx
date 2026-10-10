@@ -5,10 +5,10 @@ import { BlendFunction, Effect, EffectAttribute } from "postprocessing";
 import { useContext, useMemo } from "react";
 import * as THREE from "three";
 
-// ---------------- ink outlines ----------------
-// Line art drawn from the scene itself: edges where depth jumps (silhouettes) or the surface
-// turns sharply (creases). Lines take a darkened version of the local colour, like anime
-// background art, and fade out with distance.
+// ---------------- line art ----------------
+// Soft, coloured line work drawn from the scene itself: edges where depth jumps (silhouettes) or the
+// surface turns sharply (creases). Like Ghibli background art, lines are a deeper shade of the local
+// colour rather than black ink, and they fade with distance.
 const inkFrag = /* glsl */ `
 uniform sampler2D tNormal;
 uniform float uThickness;
@@ -32,9 +32,9 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
     max(1.0 - dot(nc, nrm(uv + vec2(0.0, o.y))), 1.0 - dot(nc, nrm(uv - vec2(0.0, o.y))))
   );
 
-  float edge = max(smoothstep(0.015, 0.05, depthEdge), smoothstep(0.3, 0.7, creases));
+  float edge = max(smoothstep(0.018, 0.06, depthEdge), smoothstep(0.35, 0.75, creases));
   edge *= smoothstep(9.0, 2.5, dc);
-  vec3 ink = inputColor.rgb * vec3(0.22, 0.18, 0.27);
+  vec3 ink = inputColor.rgb * vec3(0.4, 0.33, 0.38);
   outputColor = vec4(mix(inputColor.rgb, ink, edge * uStrength), inputColor.a);
 }
 `;
@@ -45,8 +45,8 @@ class InkEffect extends Effect {
       attributes: EffectAttribute.DEPTH,
       uniforms: new Map<string, THREE.Uniform>([
         ["tNormal", new THREE.Uniform(normalTexture)],
-        ["uThickness", new THREE.Uniform(1.35)],
-        ["uStrength", new THREE.Uniform(1.0)],
+        ["uThickness", new THREE.Uniform(1.1)],
+        ["uStrength", new THREE.Uniform(0.8)],
       ]),
     });
   }
@@ -58,8 +58,8 @@ export function Ink() {
   return <primitive object={effect} dispose={null} />;
 }
 
-// ---------------- anime colour grade ----------------
-// Richer saturation, cool lavender shadows and warm highlights (applied in linear light, before tone mapping).
+// ---------------- painted colour grade ----------------
+// Gently richer colour, soft lavender shadows and warm sunlit highlights (linear light, before tone mapping).
 const gradeFrag = /* glsl */ `
 uniform float uSaturation;
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
@@ -75,14 +75,14 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
 
 class GradeEffect extends Effect {
   constructor() {
-    super("AnimeGrade", gradeFrag, {
+    super("PaintGrade", gradeFrag, {
       blendFunction: BlendFunction.NORMAL,
-      uniforms: new Map([["uSaturation", new THREE.Uniform(1.28)]]),
+      uniforms: new Map([["uSaturation", new THREE.Uniform(1.2)]]),
     });
   }
 }
 
-export function AnimeGrade() {
+export function PaintGrade() {
   const effect = useMemo(() => new GradeEffect(), []);
   return <primitive object={effect} dispose={null} />;
 }

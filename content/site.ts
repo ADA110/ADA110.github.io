@@ -34,7 +34,7 @@ export const site = {
       title: "This Website",
       year: "2026",
       blurb:
-        "A real-time 3D room built with React Three Fiber: photo-scanned models and materials mixed with objects modeled in code, soft shadows, a sky driven by live Palo Alto weather, and synthesized sound.",
+        "A hand-painted, Ghibli-style 3D room built with React Three Fiber: cel shading and line art drawn in real time, a sky driven by live Palo Alto weather, and synthesized sound.",
       tags: ["Three.js", "R3F", "GLSL", "Next.js"],
       links: [{ label: "Source", href: "https://github.com/" }],
       color: "#3b6cf6",

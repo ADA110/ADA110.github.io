@@ -1,6 +1,6 @@
 # Abhinav's desk
 
-A personal website that is a realistic 3D desk. Click an object to read about it:
+A personal website that is a hand-painted, anime-style 3D desk. Click an object to read about it:
 
 | Object | Section | URL |
 | --- | --- | --- |
@@ -27,25 +27,26 @@ corkboard cards, book spines, the monitor's project grid, and the phone notifica
 
 ## How it's built
 
-- Next.js (App Router) + React Three Fiber + drei + postprocessing.
-- **Photo-scanned assets** from [Poly Haven](https://polyhaven.com) (CC0): the lamp, plants, picture frames,
-  lantern, notebook and stationery (`public/models/`), the walnut, oak, plaster, wool, leather and linen
-  materials (`public/textures/`), and the `small_empty_room_1` HDRI used for reflections (`public/env/`).
-  Everything else — monitor, keyboard, headphones, phone, printer, books, gear — is modeled in code
+- Next.js (App Router, static export) + React Three Fiber + drei + postprocessing.
+- **Hand-painted anime look** (Studio Ghibli–style): every PBR material gets a cel-shaded toon twin with
+  soft light bands (`components/scene/style/CelShading.tsx`); photo textures are sampled softer so they read
+  as painted. Post-processing draws soft coloured line art from depth + normals and applies a warm,
+  lavender-shadowed colour grade (`components/scene/style/ink.tsx`).
+- **Assets:** models (lamp, plants, frames, lantern, notebook, stationery) and wood/wool/leather colour maps
+  are CC0 scans from [Poly Haven](https://polyhaven.com); everything else is modeled in code
   (`components/scene/`). Sounds are synthesized with WebAudio (`lib/sound.ts`).
-- **Asset pipeline:** `node scripts/optimize-assets.mjs <raw dir>` rebuilds every model, texture and the HDRI from the
-  original Poly Haven downloads, sized for how close the camera gets (meshopt geometry, WebP textures, a 256px HDRI).
-  `lib/assets.ts` lists every file; the page `<head>` preloads them all in parallel, and the scene compiles shaders and
-  uploads textures behind the loader before the first frame. Inspect a model with `node scripts/inspect-gltf.mjs`.
-- Debug any camera framing with `?cam=x,y,z,targetX,targetY,targetZ`.
-- Lighting: lamp spotlight with soft (PCSS) shadows, sunlight through the window that follows the
-  visitor's local time, monitor glow (RectAreaLight), and a procedural environment for reflections.
-  Post: N8AO ambient occlusion, bloom, vignette, film grain, AgX tone mapping.
+- **Light:** the sun enters only through the window (the ceiling and walls cast shadows), from the same
+  direction the painted sky draws it; a desk lamp with the light/dark switch; soft sky + floor bounce light.
 - **Live Palo Alto time + weather** (Open-Meteo, no API key, fetched in the browser every 10 min; `lib/weather.ts`)
-  drives the window view (foothills + tree line, sun/moon/stars, clouds, fog, rain, snow, lightning), the
+  drives the window view (foothills + tree line, sun/moon/stars, cumulus clouds, fog, rain, snow, lightning), the
   sunlight in the room, the wall display and the phone's lock screen.
 - Preview any sky with `?hour=21` and/or `?weather=rain` (clear, partly, cloudy, fog, drizzle, rain, storm, snow),
   or from the wall display's panel.
+- **Asset pipeline:** `node scripts/optimize-assets.mjs <raw dir>` rebuilds every model and texture from the
+  original Poly Haven downloads, sized for how close the camera gets (meshopt geometry, WebP colour maps only).
+  `lib/assets.ts` lists every file; the page `<head>` preloads them all in parallel. Inspect a model with
+  `node scripts/inspect-gltf.mjs`.
+- Debug any camera framing with `?cam=x,y,z,targetX,targetY,targetZ`.
 - Drops to a cheaper render path automatically on slow devices, and falls back to the text version without WebGL.
 
 ```bash

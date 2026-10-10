@@ -1,8 +1,9 @@
 // Rebuilds every scanned asset in public/ from the original Poly Haven downloads, sized for how
-// close the camera ever gets to it. Run after downloading the raw files (see README):
+// close the camera ever gets to it. The site is cel-shaded, so only colour maps ship: normal,
+// roughness/metalness and occlusion maps are stripped. Run after downloading the raw files:
 //
-//   node scripts/optimize-assets.mjs <raw dir with models/ textures/ hdri/>
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+//   node scripts/optimize-assets.mjs <raw dir with models/ textures/>
+import { mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
@@ -40,6 +41,7 @@ for (const [name, [px, reduce = {}]] of Object.entries(MODELS)) {
     await doc.transform(simplify({ simplifier: MeshoptSimplifier, ratio, error }));
     saved.forEach(([n, m]) => n.setMesh(m));
   }
+  for (const m of doc.getRoot().listMaterials()) m.setNormalTexture(null).setMetallicRoughnessTexture(null).setOcclusionTexture(null);
   await doc.transform(
     dedup(),
     prune(),
@@ -50,83 +52,21 @@ for (const [name, [px, reduce = {}]] of Object.entries(MODELS)) {
   console.log("model", name);
 }
 
-// ---------- surface materials: px per map (0 = not used by the site, not shipped)
+// ---------- surface materials: colour map only, px per material
 const TEXTURES = {
-  walnut_veneer: { diff: 1024, nor: 1024, rough: 512 }, // desk top, seen up close
-  wood_floor: { diff: 1024, nor: 512, rough: 512 },
-  plastered_wall_04: { diff: 0, nor: 512, rough: 256 }, // walls are painted: relief only
-  poly_wool_herringbone: { diff: 512, nor: 512, rough: 256 },
-  rough_linen: { diff: 0, nor: 512, rough: 256 }, // desk mat: dark dyed, relief only
-  white_oak_veneer: { diff: 512, nor: 512, rough: 256 },
-  brown_leather: { diff: 256, nor: 256, rough: 256 },
-  caban: { diff: 256, nor: 256, rough: 256 },
+  walnut_veneer: 1024, // desk top, seen up close
+  wood_floor: 1024,
+  poly_wool_herringbone: 512,
+  white_oak_veneer: 512,
+  brown_leather: 256,
+  caban: 256,
 };
-for (const [name, maps] of Object.entries(TEXTURES)) {
+rmSync("public/textures", { recursive: true, force: true });
+for (const [name, px] of Object.entries(TEXTURES)) {
   mkdirSync(join("public/textures", name), { recursive: true });
-  for (const [map, px] of Object.entries(maps)) {
-    if (!px) continue;
-    await sharp(join(raw, "textures", name, `${map}.jpg`))
-      .resize(px, px, { fit: "inside" })
-      .webp({ quality: map === "nor" ? 85 : map === "rough" ? 70 : 78 })
-      .toFile(join("public/textures", name, `${map}.webp`));
-  }
+  await sharp(join(raw, "textures", name, "diff.jpg"))
+    .resize(px, px, { fit: "inside" })
+    .webp({ quality: 78 })
+    .toFile(join("public/textures", name, "diff.webp"));
   console.log("texture", name);
-}
-
-// ---------- reflection HDRI: only drives soft reflections, so 256x128 is plenty
-writeFileSync("public/env/room.hdr", downsampleHDR(readFileSync(join(raw, "hdri", "small_empty_room_1_1k.hdr")), 4));
-console.log("hdri");
-
-/** Decode a Radiance RGBE (.hdr), box-filter it by `f`, and re-encode it (flat, no RLE). */
-function downsampleHDR(buf, f) {
-  let p = 0;
-  const line = () => {
-    const s = p;
-    while (buf[p] !== 0x0a) p++;
-    return buf.toString("latin1", s, p++);
-  };
-  while (line() !== "");
-  const [, H, , W] = line().split(" ").map((v, i) => (i % 2 ? +v : v));
-  const rgb = new Float32Array(W * H * 3);
-  const scan = new Uint8Array(W * 4);
-  for (let y = 0; y < H; y++) {
-    if (buf[p] === 2 && buf[p + 1] === 2) {
-      p += 4; // new-style RLE: four channel planes
-      for (let c = 0; c < 4; c++) {
-        let x = 0;
-        while (x < W) {
-          let n = buf[p++];
-          if (n > 128) {
-            n -= 128;
-            const v = buf[p++];
-            while (n--) scan[(x++) * 4 + c] = v;
-          } else while (n--) scan[(x++) * 4 + c] = buf[p++];
-        }
-      }
-    } else {
-      scan.set(buf.subarray(p, p + W * 4));
-      p += W * 4;
-    }
-    for (let x = 0; x < W; x++) {
-      const e = scan[x * 4 + 3];
-      const s = e ? Math.pow(2, e - 136) : 0;
-      for (let c = 0; c < 3; c++) rgb[(y * W + x) * 3 + c] = scan[x * 4 + c] * s;
-    }
-  }
-  const w = W / f, h = H / f;
-  const out = Buffer.alloc(w * h * 4);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const sum = [0, 0, 0];
-    for (let j = 0; j < f; j++) for (let i = 0; i < f; i++) for (let c = 0; c < 3; c++) sum[c] += rgb[((y * f + j) * W + x * f + i) * 3 + c];
-    const v = sum.map((s) => s / (f * f));
-    const m = Math.max(...v);
-    const o = (y * w + x) * 4;
-    if (m < 1e-32) continue;
-    const e = Math.ceil(Math.log2(m) + 1e-9);
-    const sc = 256 / Math.pow(2, e);
-    for (let c = 0; c < 3; c++) out[o + c] = Math.min(255, Math.floor(v[c] * sc));
-    out[o + 3] = e + 128;
-  }
-  const header = Buffer.from(`#?RADIANCE\nFORMAT=32-bit_rle_rgbe\n\n-Y ${h} +X ${w}\n`, "latin1");
-  return Buffer.concat([header, out]);
 }

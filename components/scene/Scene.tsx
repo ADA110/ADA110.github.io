@@ -5,11 +5,11 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Suspense, useRef } from "react";
 import { HOME_CAMERA } from "@/lib/sections";
 import { useStore } from "@/lib/store";
-import { AnimeMaterials } from "./anime/AnimeMaterials";
 import { CameraRig } from "./CameraRig";
 import { Desk } from "./Desk";
 import { Dust } from "./Dust";
 import { Effects } from "./Effects";
+import { CelShading } from "./style/CelShading";
 import { LabelProjector } from "./Hotspot";
 import { Lamp } from "./Lamp";
 import { Lights } from "./Lights";
@@ -62,7 +62,7 @@ export default function Scene() {
         <Lights />
         <CameraRig />
         <LabelProjector />
-        <AnimeMaterials />
+        <CelShading />
         <Effects />
         <ReadySignal />
       </Suspense>

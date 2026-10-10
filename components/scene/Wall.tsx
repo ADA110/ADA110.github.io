@@ -292,8 +292,8 @@ function Printer() {
   );
   const { x, cabinetH } = PRINTER;
   const z = WALL + 0.26;
-  const body = paint("#ecebe7", 0.4);
-  const cab = paint("#2f3134", 0.55);
+  const body = paint("#ecebe7");
+  const cab = paint("#2f3134");
 
   useFrame((_, dt) => {
     if (job !== lastJob.current) {

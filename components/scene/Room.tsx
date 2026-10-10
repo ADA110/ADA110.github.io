@@ -21,13 +21,12 @@ export const ROOM = {
 
 const WALL_T = 0.14;
 
-/** Scanned plaster, tinted a warm white. Tiles every ~1.6 m along the wall's long side. */
+/** Painted wall: flat warm white, like a hand-painted background. */
 function Wall({ size, position }: { size: [number, number, number]; position: [number, number, number] }) {
-  const tex = useScanned("plastered_wall_04", [Math.max(size[0], size[2]) / 1.6, size[1] / 1.6]);
   return (
     <mesh position={position} receiveShadow castShadow>
       <boxGeometry args={size} />
-      <meshStandardMaterial normalMap={tex.normalMap} roughnessMap={tex.roughnessMap} color="#f4ede3" normalScale={new THREE.Vector2(0.7, 0.7)} />
+      <meshStandardMaterial color="#f4ede3" />
     </mesh>
   );
 }
@@ -39,7 +38,7 @@ function Window() {
   const h = y1 - y0;
   const zc = (z0 + z1) / 2;
   const yc = (y0 + y1) / 2;
-  const frame = paint("#f4f1ea", 0.45);
+  const frame = paint("#f4f1ea");
   const frameMat = useMemo(() => new THREE.MeshStandardMaterial({ ...frame, roughness: 1 }), [frame]);
   const t = 0.045;
   const bars: [number, number, number, number, number, number][] = [
@@ -81,7 +80,7 @@ void main() {
 // The view out of the window: Palo Alto foothills and a tree line under a sky driven by
 // the real local time and weather (sun, moon, stars, clouds, fog, rain, snow, lightning).
 const skyFrag = /* glsl */ `
-uniform float uHour, uTime, uRise, uSet, uCloud, uRain, uFog, uSnow, uFlash, uAnime;
+uniform float uHour, uTime, uRise, uSet, uCloud, uRain, uFog, uSnow, uFlash;
 varying vec3 vPos;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -104,31 +103,20 @@ void main() {
   float overcast = smoothstep(0.55, 1.0, uCloud);
   float golden = clamp(exp(-pow(h - uRise - 0.25, 2.0) / 0.35) + exp(-pow(h - uSet + 0.15, 2.0) / 0.35), 0.0, 1.0) * (1.0 - overcast * 0.7);
 
-  // ---- sky gradient
-  float g = smoothstep(0.2, 2.6, p.y);
-  // Overcast skies go flat grey; rain clouds are heavier and darker.
-  vec3 dayTop = mix(vec3(0.05, 0.22, 0.78), mix(vec3(0.42, 0.45, 0.5), vec3(0.17, 0.19, 0.22), uRain), overcast);
-  vec3 dayBot = mix(vec3(0.28, 0.52, 0.95), mix(vec3(0.66, 0.68, 0.7), vec3(0.32, 0.34, 0.37), uRain), overcast);
-  vec3 nightTop = vec3(0.004, 0.008, 0.03);
-  vec3 nightBot = vec3(0.02, 0.03, 0.07) + vec3(0.03, 0.02, 0.01) * overcast; // city glow on clouds
-  vec3 goldTop = vec3(0.32, 0.3, 0.6);
-  vec3 goldBot = vec3(2.0, 0.85, 0.35);
-  vec3 top = mix(mix(nightTop, dayTop, day), goldTop, golden * 0.7);
-  vec3 bot = mix(mix(nightBot, dayBot, day), goldBot, golden * 0.85);
+  // ---- sky gradient: painted anime blue (bright cyan horizon, clear blue overhead), grey when overcast
+  float g = smoothstep(0.1, 2.2, p.y);
+  vec3 dayTop = mix(vec3(0.06, 0.28, 0.86), mix(vec3(0.42, 0.45, 0.5), vec3(0.17, 0.19, 0.22), uRain), overcast);
+  vec3 dayBot = mix(vec3(0.45, 0.78, 1.05), mix(vec3(0.66, 0.68, 0.7), vec3(0.32, 0.34, 0.37), uRain), overcast);
+  vec3 nightTop = vec3(0.012, 0.012, 0.06);
+  vec3 nightBot = vec3(0.06, 0.05, 0.14) + vec3(0.03, 0.02, 0.01) * overcast; // town glow
+  vec3 top = mix(mix(nightTop, dayTop, day), vec3(0.3, 0.22, 0.7), golden * 0.7);
+  vec3 bot = mix(mix(nightBot, dayBot, day), vec3(2.3, 0.7, 0.45), golden * 0.85);
   vec3 col = mix(bot, top, g);
-  bool anime = uAnime > 0.5;
-  if (anime) {
-    // Anime sky: deep, saturated blue overhead fading to bright cyan at the horizon.
-    vec3 at = mix(nightTop * 1.6 + vec3(0.01, 0.0, 0.03), vec3(0.02, 0.17, 0.85), day);
-    vec3 ab = mix(nightBot * 1.6 + vec3(0.03, 0.01, 0.06), vec3(0.38, 0.72, 1.05), day);
-    at = mix(at, vec3(0.3, 0.22, 0.7), golden * 0.7);
-    ab = mix(ab, vec3(2.3, 0.7, 0.45), golden * 0.85);
-    col = mix(mix(ab, at, smoothstep(0.1, 2.2, p.y)), col, overcast);
-  }
 
   // ---- sun & moon
   float elev = sin(3.14159 * (h - uRise) / max(1.0, uSet - uRise));
-  vec2 sunP = vec2(2.0, 0.75 + elev * 2.4);
+  // Same place the room's sunlight comes from (lib/sky.ts sunZ); p.x runs along -z.
+  vec2 sunP = vec2(-(1.3 - golden * 0.6), 0.75 + elev * 2.4);
   float sd = length(p - sunP);
   float sunVis = smoothstep(-0.05, 0.08, elev) * (1.0 - overcast * 0.95);
   col += vec3(3.0, 2.2, 1.4) * smoothstep(0.11, 0.09, sd) * sunVis * 5.0;
@@ -144,20 +132,15 @@ void main() {
   float star = step(0.993, hash(sg)) * (0.6 + 0.4 * sin(uTime * 2.0 + hash(sg + 3.0) * 30.0));
   col += vec3(star) * night * (1.0 - uCloud) * smoothstep(1.3, 2.0, p.y) * 1.6;
 
-  // ---- clouds
+  // ---- clouds: big crisp-edged cumulus with sunlit tops and lavender undersides (always a few, as in
+  // painted skies; more with real cloud cover)
   vec2 cp = p * vec2(0.45, 1.0) + vec2(uTime * 0.015, 0.0);
-  // Anime skies always have big, crisp-edged cumulus; realistic ones follow the live cloud cover.
-  float cover = anime ? max(uCloud, 0.62) : uCloud;
-  float n = fbm(cp * (anime ? 1.0 : 1.4));
+  float cover = max(uCloud, 0.62);
+  float n = fbm(cp);
   float edge = 1.0 - cover * 0.72;
-  float cloud = smoothstep(edge - (anime ? 0.0 : 0.05), edge + (anime ? 0.025 : 0.22), n) * smoothstep(0.8, 1.5, p.y);
-  vec3 cloudCol = mix(vec3(0.035, 0.04, 0.055), vec3(1.05, 1.05, 1.08), day);
-  cloudCol *= 0.72 + 0.4 * fbm(cp * 3.0 + 3.0);
-  if (anime) {
-    // Bright sunlit tops, soft lavender undersides.
-    float lit = smoothstep(edge, edge + 0.22, n) * 0.6 + 0.4 * smoothstep(0.9, 2.4, p.y);
-    cloudCol = mix(vec3(0.58, 0.6, 0.86), vec3(1.3, 1.27, 1.22), lit) * mix(0.18, 1.0, day);
-  }
+  float cloud = smoothstep(edge, edge + 0.025, n) * smoothstep(0.8, 1.5, p.y);
+  float lit = smoothstep(edge, edge + 0.22, n) * 0.6 + 0.4 * smoothstep(0.9, 2.4, p.y);
+  vec3 cloudCol = mix(vec3(0.58, 0.6, 0.86), vec3(1.3, 1.27, 1.22), lit) * mix(0.18, 1.0, day);
   cloudCol = mix(cloudCol, vec3(1.9, 0.95, 0.65), golden * 0.55);
   cloudCol = mix(cloudCol, cloudCol * vec3(0.66, 0.68, 0.72), overcast);
   col = mix(col, cloudCol, cloud * 0.95);
@@ -229,7 +212,6 @@ function Sky() {
           uFog: { value: 0 },
           uSnow: { value: 0 },
           uFlash: { value: 0 },
-          uAnime: { value: 0 },
         },
       }),
     [],
@@ -241,7 +223,6 @@ function Sky() {
     const t = state.clock.elapsedTime;
     const u = material.uniforms;
     u.uTime.value = t;
-    u.uAnime.value = useStore.getState().artStyle === "anime" ? 1 : 0;
     if (t - lastUpdate.current > 0.2 || lastUpdate.current < 0) {
       lastUpdate.current = t;
       const live = liveSky();
@@ -284,7 +265,7 @@ export function Room() {
   const rugTex = useScanned("poly_wool_herringbone", [2.2 / 0.7, 1.5 / 0.7]);
   const xMid = (ROOM.right + ROOM.left) / 2;
   const H = ROOM.height;
-  const baseboard = paint("#f4f1ea", 0.5);
+  const baseboard = paint("#f4f1ea");
 
   return (
     <group>
@@ -298,9 +279,10 @@ export function Room() {
         <meshStandardMaterial {...rugTex} color="#e8e0d4" />
       </RoundedBox>
       {/* ceiling */}
-      <mesh rotation={[Math.PI / 2, 0, 0]} position={[xMid, H, zMid]}>
-        <planeGeometry args={[width, depth]} />
-        <meshStandardMaterial color="#efebe4" roughness={1} />
+      {/* a solid slab, so it blocks the sun: daylight only enters through the window */}
+      <mesh position={[xMid, H + 0.05, zMid]} castShadow receiveShadow>
+        <boxGeometry args={[width + WALL_T * 2, 0.1, depth]} />
+        <meshStandardMaterial color="#efebe4" />
       </mesh>
       {/* back wall */}
       <Wall size={[width + WALL_T * 2, H, WALL_T]} position={[xMid, H / 2, ROOM.back - WALL_T / 2]} />

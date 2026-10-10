@@ -243,7 +243,6 @@ function PenCup() {
 
 export function Desk() {
   const wood = useScanned("walnut_veneer", [1, 0.47], Math.PI / 2);
-  const mat = useScanned("rough_linen", [4, 1.8]);
   const { top, width, depth, z, thickness } = DESK;
   return (
     <group>
@@ -253,7 +252,7 @@ export function Desk() {
       <Legs />
       {/* desk mat */}
       <RoundedBox args={[0.92, 0.003, 0.4]} radius={0.0014} position={[0.02, top + 0.0015, 0.03]} receiveShadow>
-        <meshStandardMaterial normalMap={mat.normalMap} roughnessMap={mat.roughnessMap} color="#26282c" />
+        <meshStandardMaterial color="#2f3136" />
       </RoundedBox>
       <Keyboard />
       <Mouse />

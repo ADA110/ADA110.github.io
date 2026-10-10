@@ -47,13 +47,10 @@ const mix = (a: RGB, b: RGB, t: number): RGB => [
   a[2] + (b[2] - a[2]) * t,
 ];
 
-type Field = (x: number, y: number) => { h: number; color: RGB; rough: number };
+type Field = (x: number, y: number) => RGB;
 
-export type PBRSet = {
-  map: THREE.CanvasTexture;
-  roughnessMap: THREE.CanvasTexture;
-  normalMap: THREE.CanvasTexture;
-};
+/** A procedural colour texture (the site is cel-shaded, so colour is all a surface needs). */
+export type PaintedSet = { map: THREE.CanvasTexture };
 
 function makeCanvas(w: number, h: number) {
   const c = document.createElement("canvas");
@@ -62,68 +59,31 @@ function makeCanvas(w: number, h: number) {
   return c;
 }
 
-function toTexture(canvas: HTMLCanvasElement, srgb: boolean, repeat: [number, number]) {
-  const t = new THREE.CanvasTexture(canvas);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(repeat[0], repeat[1]);
-  t.anisotropy = 8;
-  t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
-  return t;
-}
-
-function bake(w: number, h: number, field: Field, normalStrength: number, repeat: [number, number] = [1, 1]): PBRSet {
-  const heights = new Float32Array(w * h);
-  const cC = makeCanvas(w, h);
-  const rC = makeCanvas(w, h);
-  const nC = makeCanvas(w, h);
-  const cI = cC.getContext("2d")!.createImageData(w, h);
-  const rI = rC.getContext("2d")!.createImageData(w, h);
-  const nI = nC.getContext("2d")!.createImageData(w, h);
-
+function bake(w: number, h: number, field: Field, repeat: [number, number] = [1, 1]): PaintedSet {
+  const canvas = makeCanvas(w, h);
+  const ctx = canvas.getContext("2d")!;
+  const img = ctx.createImageData(w, h);
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      const s = field(x, y);
-      heights[i] = s.h;
-      cI.data[i * 4] = s.color[0];
-      cI.data[i * 4 + 1] = s.color[1];
-      cI.data[i * 4 + 2] = s.color[2];
-      cI.data[i * 4 + 3] = 255;
-      const r = Math.max(0, Math.min(255, s.rough * 255));
-      rI.data[i * 4] = rI.data[i * 4 + 1] = rI.data[i * 4 + 2] = r;
-      rI.data[i * 4 + 3] = 255;
-    }
-  }
-  // Sobel normal map (wraps at edges so the texture tiles).
-  const H = (x: number, y: number) => heights[((y + h) % h) * w + ((x + w) % w)];
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const dx =
-        H(x + 1, y - 1) + 2 * H(x + 1, y) + H(x + 1, y + 1) - H(x - 1, y - 1) - 2 * H(x - 1, y) - H(x - 1, y + 1);
-      const dy =
-        H(x - 1, y + 1) + 2 * H(x, y + 1) + H(x + 1, y + 1) - H(x - 1, y - 1) - 2 * H(x, y - 1) - H(x + 1, y - 1);
-      const nx = -dx * normalStrength;
-      const ny = dy * normalStrength;
-      const len = Math.sqrt(nx * nx + ny * ny + 1);
       const i = (y * w + x) * 4;
-      nI.data[i] = (nx / len * 0.5 + 0.5) * 255;
-      nI.data[i + 1] = (ny / len * 0.5 + 0.5) * 255;
-      nI.data[i + 2] = (1 / len * 0.5 + 0.5) * 255;
-      nI.data[i + 3] = 255;
+      const c = field(x, y);
+      img.data[i] = c[0];
+      img.data[i + 1] = c[1];
+      img.data[i + 2] = c[2];
+      img.data[i + 3] = 255;
     }
   }
-  cC.getContext("2d")!.putImageData(cI, 0, 0);
-  rC.getContext("2d")!.putImageData(rI, 0, 0);
-  nC.getContext("2d")!.putImageData(nI, 0, 0);
-  return {
-    map: toTexture(cC, true, repeat),
-    roughnessMap: toTexture(rC, false, repeat),
-    normalMap: toTexture(nC, false, repeat),
-  };
+  ctx.putImageData(img, 0, 0);
+  const map = new THREE.CanvasTexture(canvas);
+  map.wrapS = map.wrapT = THREE.RepeatWrapping;
+  map.repeat.set(repeat[0], repeat[1]);
+  map.anisotropy = 8;
+  map.colorSpace = THREE.SRGBColorSpace;
+  return { map };
 }
 
-const cache = new Map<string, PBRSet>();
-function cached(key: string, make: () => PBRSet) {
+const cache = new Map<string, PaintedSet>();
+function cached(key: string, make: () => PaintedSet) {
   if (!cache.has(key)) cache.set(key, make());
   return cache.get(key)!;
 }
@@ -142,18 +102,15 @@ export const cork = () =>
       let color = mix(a, b, g2 * 0.7);
       if (g > 0.78) color = c;
       if (g < 0.15) color = b;
-      return { h: g * 0.7 + g2 * 0.3, color, rough: 0.95 };
-    }, 2.5);
+      return color;
+    });
   });
 
-/** Painted MDF / plastic with a faint orange-peel. */
-export const paint = (tint: string, rough = 0.55) =>
-  cached("paint" + tint + rough, () => {
+/** Painted MDF / plastic: a flat colour with a barely-there brush mottle. */
+export const paint = (tint: string) =>
+  cached("paint" + tint, () => {
     const base = hex(tint);
-    return bake(256, 256, (x, y) => {
-      const n = fbm(x * 0.2, y * 0.2, 3, 61);
-      return { h: n, color: mix(base, [0, 0, 0], (n - 0.5) * 0.03), rough: rough + (n - 0.5) * 0.06 };
-    }, 0.12, [3, 3]);
+    return bake(128, 128, (x, y) => mix(base, [0, 0, 0], (fbm(x * 0.2, y * 0.2, 3, 61) - 0.5) * 0.03), [3, 3]);
   });
 
 // ---------- canvas-drawn graphics (text, UI) ----------

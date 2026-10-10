@@ -81,5 +81,8 @@ export function liveSky() {
   return { hour, weather: w, previewing: preview.hour !== null || preview.condition !== null };
 }
 
+/** Where along the window wall (world z) the sun sits; it swings toward the back as it sets. */
+export const sunZ = (golden: number) => 1.3 - golden * 0.6;
+
 /** Lightning flash level (0–1), animated by the sky during storms and read by the room lights. */
 export const lightning = { value: 0 };

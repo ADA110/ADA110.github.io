@@ -1,34 +1,25 @@
 "use client";
 
-import { useEnvironment, useGLTF, useTexture } from "@react-three/drei";
+import { useGLTF, useTexture } from "@react-three/drei";
 import { useMemo } from "react";
 import * as THREE from "three";
-import { ALL_TEXTURE_URLS, ENV_URL, MODEL_NAMES, materialUrls, modelUrl, type ScannedMaterial } from "@/lib/assets";
+import { ALL_TEXTURE_URLS, MODEL_NAMES, materialUrl, modelUrl, type ScannedMaterial } from "@/lib/assets";
 
 export type { ScannedMaterial };
 
-/**
- * Albedo / normal / roughness maps for a scanned material, tiled `repeat` times.
- * Textures are cloned per call so different surfaces can tile differently.
- * Relief-only materials return no `map`.
- */
+/** A scanned material's colour map, tiled `repeat` times (cloned so surfaces can tile differently). */
 export function useScanned(name: ScannedMaterial, repeat: [number, number] = [1, 1], rotation = 0) {
-  const loaded = useTexture(materialUrls(name));
-  const diff = loaded.length === 3 ? loaded[0] : null;
-  const [nor, rough] = loaded.slice(-2);
+  const diff = useTexture(materialUrl(name));
   return useMemo(() => {
-    const set = (t: THREE.Texture, srgb: boolean) => {
-      const c = t.clone();
-      c.wrapS = c.wrapT = THREE.RepeatWrapping;
-      c.repeat.set(repeat[0], repeat[1]);
-      c.rotation = rotation;
-      c.anisotropy = 8;
-      c.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
-      c.needsUpdate = true;
-      return c;
-    };
-    return { map: diff ? set(diff, true) : null, normalMap: set(nor, false), roughnessMap: set(rough, false) };
-  }, [diff, nor, rough, repeat[0], repeat[1], rotation]); // eslint-disable-line react-hooks/exhaustive-deps
+    const map = diff.clone();
+    map.wrapS = map.wrapT = THREE.RepeatWrapping;
+    map.repeat.set(repeat[0], repeat[1]);
+    map.rotation = rotation;
+    map.anisotropy = 8;
+    map.colorSpace = THREE.SRGBColorSpace;
+    map.needsUpdate = true;
+    return { map };
+  }, [diff, repeat[0], repeat[1], rotation]); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
 /** Scanned 3D models (meshopt-compressed GLB) — the decoder ships with three, no CDN needed. */
@@ -80,4 +71,3 @@ export function withArtwork<M extends THREE.Material | THREE.Material[]>(materia
 // Start every download as soon as this module loads, all in parallel (no per-component waterfall).
 MODEL_NAMES.forEach((m) => useGLTF.preload(modelUrl(m), false, true));
 useTexture.preload(ALL_TEXTURE_URLS);
-useEnvironment.preload({ files: ENV_URL });

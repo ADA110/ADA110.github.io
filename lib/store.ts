@@ -3,7 +3,6 @@ import type { SectionId } from "./sections";
 import type { Condition, Weather } from "./weather";
 
 export type Quality = "high" | "low";
-export type ArtStyle = "realistic" | "anime";
 
 type State = {
   section: SectionId | null;
@@ -23,7 +22,6 @@ type State = {
   printJob: number;
   /** Live Palo Alto weather (null until loaded or if unavailable). */
   weather: Weather | null;
-  artStyle: ArtStyle;
   /** Visitor-chosen sky preview; null fields mean "live". */
   preview: { condition: Condition | null; hour: number | null };
   /** Briefly show every object's label after the intro. */
@@ -52,7 +50,6 @@ export const useStore = create<State>((set) => ({
   labelHint: false,
   weather: null,
   preview: { condition: null, hour: null },
-  artStyle: "realistic",
   go: () => {},
 
   set: (partial) => set(partial),
