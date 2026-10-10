@@ -7,7 +7,6 @@ import { HOME_CAMERA } from "@/lib/sections";
 import { useStore } from "@/lib/store";
 import { CameraRig } from "./CameraRig";
 import { Desk } from "./Desk";
-import { Dust } from "./Dust";
 import { Effects } from "./Effects";
 import { CelShading } from "./style/CelShading";
 import { LabelProjector } from "./Hotspot";
@@ -58,7 +57,6 @@ export default function Scene() {
         <WeatherClock />
         <Outdoors />
         <NotesPile />
-        <Dust />
         <Lights />
         <CameraRig />
         <LabelProjector />
