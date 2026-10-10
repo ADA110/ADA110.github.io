@@ -25,7 +25,7 @@ export const site = {
     ],
     facts: [
       { label: "Based in", value: "Stanford, CA" },
-      { label: "Focus", value: "AI product" },
+      { label: "Focus", value: "AI and product" },
       { label: "Currently", value: "Finishing my MBA" },
       { label: "Fuel", value: "Coupa Café coffee" },
     ],
