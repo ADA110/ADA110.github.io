@@ -12,10 +12,10 @@ export const site = {
   emails: ["aashar@stanford.edu", "abhinav.ashar2@gmail.com"],
   resumeUrl: "/resume.pdf",
   linkedin: "https://www.linkedin.com/in/abhinavashar/",
-  github: "https://github.com/ADA110",
+  github: "https://github.com/abhi-ashar",
   socials: [
     { label: "LinkedIn", href: "https://www.linkedin.com/in/abhinavashar/" },
-    { label: "GitHub", href: "https://github.com/ADA110" },
+    { label: "GitHub", href: "https://github.com/abhi-ashar" },
   ],
 
   about: {
@@ -39,7 +39,7 @@ export const site = {
       blurb:
         "A hand-painted, Ghibli-style 3D room built with React Three Fiber: cel shading and line art drawn in real time, a sky that follows the real weather where I live, and synthesized sound.",
       tags: ["Three.js", "R3F", "GLSL", "Next.js"],
-      links: [{ label: "Code", href: "https://github.com/ADA110/ADA110.github.io" }],
+      links: [{ label: "Code", href: "https://github.com/abhi-ashar/abhi-ashar.github.io" }],
       color: "#3b6cf6",
     },
     {
@@ -51,7 +51,7 @@ export const site = {
       tags: ["Claude Code", "Multi-agent", "Vercel", "Redis"],
       links: [
         { label: "Live", href: "https://agents-outreach-team.vercel.app" },
-        { label: "Code", href: "https://github.com/ADA110/outreach-workshop-site" },
+        { label: "Code", href: "https://github.com/abhi-ashar/outreach-workshop-site" },
       ],
       color: "#e2683c",
     },
@@ -64,7 +64,7 @@ export const site = {
       tags: ["React", "Express", "Postgres", "Vercel"],
       links: [
         { label: "Live", href: "https://gsb-housing.vercel.app" },
-        { label: "Code", href: "https://github.com/ADA110/gsb_housing" },
+        { label: "Code", href: "https://github.com/abhi-ashar/gsb_housing" },
       ],
       color: "#8c1515",
     },
@@ -75,7 +75,7 @@ export const site = {
       blurb:
         "An MCP server that connects Claude to Canvas, so you can ask about your courses, assignments, modules, announcements and upcoming due dates in plain English.",
       tags: ["TypeScript", "MCP", "Canvas API"],
-      links: [{ label: "Code", href: "https://github.com/ADA110/canvas-mcp" }],
+      links: [{ label: "Code", href: "https://github.com/abhi-ashar/canvas-mcp" }],
       color: "#16a37f",
     },
   ] as { title: string; icon: IconName; year: string; blurb: string; tags: string[]; links: { label: string; href: string }[]; color: string }[],

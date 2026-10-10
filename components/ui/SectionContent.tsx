@@ -126,7 +126,7 @@ function Projects() {
           </svg>
         </span>
         <span>
-          <strong>Everything else I&apos;ve built:</strong> <span className="muted">github.com/ADA110</span>
+          <strong>Everything else I&apos;ve built:</strong> <span className="muted">github.com/abhi-ashar</span>
         </span>
         <span aria-hidden>↗</span>
       </a>

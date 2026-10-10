@@ -54,5 +54,5 @@ npm run dev
 
 ## Deploying
 
-The site is a static export (`output: "export"` → `out/`) hosted on GitHub Pages at https://ada110.github.io.
+The site is a static export (`output: "export"` → `out/`) hosted on GitHub Pages at https://abhi-ashar.github.io.
 Every push to `master` builds and deploys it via `.github/workflows/deploy.yml`.
