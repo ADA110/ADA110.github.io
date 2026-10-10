@@ -10,10 +10,9 @@ const OBJECT_LABELS: Record<string, string> = {
   skills: "Skills",
   contact: "Contact",
   resume: "Resume",
-  music: "Now playing",
   outdoors: "Outdoors",
   weather: "Where I live",
-  notes: "Old CS notes",
+  notes: "CS teaching notes",
 };
 
 /** Floating name tags over the desk objects. Positioned every frame by <LabelProjector />. */

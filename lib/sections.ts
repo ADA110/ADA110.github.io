@@ -5,7 +5,6 @@ export type SectionId =
   | "skills"
   | "contact"
   | "resume"
-  | "music"
   | "outdoors"
   | "weather"
   | "notes";
@@ -77,13 +76,6 @@ export const SECTIONS: Section[] = [
     camera: { position: [1.12, 1.22, 0.75], target: [1.08, 0.74, -0.24] },
   },
   {
-    id: "music",
-    label: "Now playing",
-    object: "Headphones",
-    inNav: false,
-    camera: { position: [0.84, 1.08, 0.36], target: [0.66, 0.97, -0.24] },
-  },
-  {
     id: "outdoors",
     label: "Outdoors",
     object: "Gear corner",
@@ -100,10 +92,10 @@ export const SECTIONS: Section[] = [
   },
   {
     id: "notes",
-    label: "Old CS notes",
-    object: "Paper pile",
+    label: "CS teaching notes",
+    object: "Stack of notes",
     inNav: false,
-    camera: { position: [0.66, 0.82, 0.8], target: [0.42, 0.12, -0.22] },
+    camera: { position: [0.86, 1.12, 0.32], target: [0.62, 0.76, -0.2] },
   },
 ];
 

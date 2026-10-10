@@ -10,7 +10,7 @@ A personal website that is a hand-painted, anime-style 3D desk. Click an object 
 | Picture frame | About | `/about` |
 | Phone | Contact | `/contact` |
 | Printer | Resume (prints a page, then download) | `/resume` |
-| Headphones | Music on repeat | `/music` |
+| Stack of notes on the desk | CS 61A / 61B teaching notes | `/notes` |
 | Wall display | Live Palo Alto time + weather, with sky previews | `/weather` |
 | Gear corner (paddle, pack, boots) | Outdoors / hobbies | `/outdoors` |
 | Lamp | Light / dark mode | |

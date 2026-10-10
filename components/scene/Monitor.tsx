@@ -19,7 +19,7 @@ const CODE: [string, string][][] = [
   [["kw", "const "], ["var", "me"], ["op", " = {"]],
   [["key", "  name"], ["op", ": "], ["str", `"${site.name}"`], ["op", ","]],
   [["key", "  based"], ["op", ": "], ["str", `"${site.location}"`], ["op", ","]],
-  [["key", "  loves"], ["op", ": ["], ["str", '"3D"'], ["op", ", "], ["str", '"systems"'], ["op", ", "], ["str", '"coffee"'], ["op", "],"]],
+  [["key", "  loves"], ["op", ": ["], ["str", '"AI"'], ["op", ", "], ["str", '"product"'], ["op", ", "], ["str", '"outdoors"'], ["op", "],"]],
   [["key", "  status"], ["op", ": "], ["str", '"open to cool problems"'], ["op", ","]],
   [["op", "};"]],
   [],

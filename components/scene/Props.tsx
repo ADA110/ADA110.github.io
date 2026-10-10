@@ -101,62 +101,6 @@ function Mug() {
   );
 }
 
-// ---------------- Headphones on a stand ----------------
-
-function Headphones() {
-  const R = 0.085;
-  const band = useMemo(() => new THREE.TorusGeometry(R, 0.0075, 14, 64, Math.PI), []);
-  const cushion = useMemo(() => new THREE.TorusGeometry(R - 0.009, 0.007, 12, 48, Math.PI * 0.6), []);
-  const pad = useMemo(() => new THREE.TorusGeometry(0.033, 0.011, 16, 40), []);
-  const shell = { color: "#d6cfc4", roughness: 0.55, metalness: 0.05 } as const;
-  const leather = { color: "#bcb3a6", roughness: 0.75 } as const;
-  const top = T + 0.27;
-  return (
-    <Hotspot id="music" labelPosition={[0.66, top + 0.06, -0.24]}>
-      <group position={[0.66, T, -0.24]} rotation={[0, -0.35, 0]}>
-        {/* stand */}
-        <mesh position={[0, 0.006, 0]} castShadow receiveShadow>
-          <cylinderGeometry args={[0.055, 0.058, 0.012, 40]} />
-          <meshStandardMaterial color="#2b2622" roughness={0.6} metalness={0.4} />
-        </mesh>
-        <mesh position={[0, 0.135, 0]} castShadow>
-          <cylinderGeometry args={[0.006, 0.006, 0.26, 16]} />
-          <meshStandardMaterial color="#2b2622" roughness={0.4} metalness={0.8} />
-        </mesh>
-        <mesh position={[0, 0.265, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
-          <capsuleGeometry args={[0.012, 0.05, 6, 16]} />
-          <meshStandardMaterial color="#5a4636" roughness={0.6} />
-        </mesh>
-        {/* headphones */}
-        <group position={[0, 0.277 - R, 0]}>
-          <mesh geometry={band} castShadow>
-            <meshStandardMaterial color="#b9b3aa" roughness={0.3} metalness={0.9} />
-          </mesh>
-          <mesh geometry={cushion} rotation={[0, 0, Math.PI * 0.2]} castShadow>
-            <meshStandardMaterial {...leather} />
-          </mesh>
-          {[-1, 1].map((s) => (
-            <group key={s} position={[s * R, -0.045, 0]} rotation={[0, 0, s * 0.06]}>
-              {/* yoke */}
-              <mesh position={[0, 0.03, 0]} castShadow>
-                <boxGeometry args={[0.008, 0.035, 0.012]} />
-                <meshStandardMaterial {...shell} />
-              </mesh>
-              <mesh rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow>
-                <cylinderGeometry args={[0.044, 0.042, 0.026, 40]} />
-                <meshStandardMaterial {...shell} />
-              </mesh>
-              <mesh geometry={pad} position={[-s * 0.016, 0, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
-                <meshStandardMaterial {...leather} />
-              </mesh>
-            </group>
-          ))}
-        </group>
-      </group>
-    </Hotspot>
-  );
-}
-
 // ---------------- Phone ----------------
 
 function Phone() {
@@ -270,7 +214,6 @@ export function Props() {
       <Mug />
       <DeskPlant />
       <FloorPlant />
-      <Headphones />
       <Phone />
       <PictureFrame />
     </>

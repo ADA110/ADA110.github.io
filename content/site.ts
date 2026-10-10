@@ -147,10 +147,10 @@ export const site = {
     ],
   },
 
-  // The paper pile under the desk: study notes from the 2019 site, kept at their original URLs.
+  // The stack of notes on the desk: CS 61A / 61B teaching notes from the 2019 site, kept at their original URLs.
   notes: {
     intro:
-      "Back in 2019 I wrote topic review notes for Berkeley's CS 61A and CS 61B. They quickly review key concepts, tips & tricks, and useful examples. Not an exhaustive textbook, just the things I felt were important to remember for the tests. They've been sitting in this pile ever since, but they're still here if they help you.",
+      "When I was teaching Berkeley's CS 61A and CS 61B, I wrote these topic review notes by hand for my students and then typeset them in LaTeX. They quickly review key concepts, tips & tricks, and useful examples: not an exhaustive textbook, just the things I felt mattered most. Teaching is one of my favorite things I've done, and the notes are still here if they help you.",
     courses: [
       {
         code: "CS 61A",
@@ -185,11 +185,6 @@ export const site = {
   },
 
   // Shown when you click the headphones.
-  onRepeat: [
-    { title: "Placeholder Song", artist: "Some Artist" },
-    { title: "Another Favorite", artist: "Another Artist" },
-    { title: "Late Night Coding", artist: "Lo-fi Collective" },
-  ],
 };
 
 export type Site = typeof site;

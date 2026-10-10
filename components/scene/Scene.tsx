@@ -13,7 +13,7 @@ import { LabelProjector } from "./Hotspot";
 import { Lamp } from "./Lamp";
 import { Lights } from "./Lights";
 import { Monitor } from "./Monitor";
-import { NotesPile } from "./NotesPile";
+import { DeskNotes, NotesPile } from "./NotesPile";
 import { Outdoors } from "./Outdoors";
 import { Props } from "./Props";
 import { Room } from "./Room";
@@ -57,6 +57,7 @@ export default function Scene() {
         <WeatherClock />
         <Outdoors />
         <NotesPile />
+        <DeskNotes />
         <Lights />
         <CameraRig />
         <LabelProjector />

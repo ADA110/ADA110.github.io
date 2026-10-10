@@ -42,7 +42,7 @@ function About() {
       <a className="card offclock" href="/notes" onClick={(e) => goTo(e, "notes")}>
         <span aria-hidden>📄</span>
         <span>
-          <strong>Throwback:</strong> <span className="muted">my 2019 CS 61A & 61B study notes</span>
+          <strong>Throwback:</strong> <span className="muted">the CS 61A & 61B notes I wrote while teaching</span>
         </span>
         <span aria-hidden>→</span>
       </a>
@@ -272,25 +272,6 @@ function Resume() {
   );
 }
 
-function Music() {
-  return (
-    <div className="stack">
-      <p className="muted">What&apos;s been on repeat lately:</p>
-      <ol className="tracks">
-        {site.onRepeat.map((t, i) => (
-          <li key={t.title}>
-            <span className="muted">{String(i + 1).padStart(2, "0")}</span>
-            <span>
-              {t.title}
-              <span className="muted"> · {t.artist}</span>
-            </span>
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
-}
-
 export const SECTION_INTRO: Record<SectionId, { title: string; kicker: string }> = {
   about: { title: "About me", kicker: "The picture frame" },
   projects: { title: "Projects", kicker: "The monitor" },
@@ -298,10 +279,9 @@ export const SECTION_INTRO: Record<SectionId, { title: string; kicker: string }>
   skills: { title: "Skills", kicker: "The bookshelf" },
   contact: { title: "Say hello", kicker: "The phone" },
   resume: { title: "Resume", kicker: "The printer" },
-  music: { title: "Now playing", kicker: "The headphones" },
   outdoors: { title: "Off the clock", kicker: "The gear corner" },
   weather: { title: "Where I live", kicker: "The wall display" },
-  notes: { title: "Old CS notes", kicker: "The paper pile" },
+  notes: { title: "CS teaching notes", kicker: "The stack on the desk" },
 };
 
 export function SectionContent({ id }: { id: SectionId }) {
@@ -318,8 +298,6 @@ export function SectionContent({ id }: { id: SectionId }) {
       return <Contact />;
     case "resume":
       return <Resume />;
-    case "music":
-      return <Music />;
     case "outdoors":
       return <Outdoors />;
     case "weather":

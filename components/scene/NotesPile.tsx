@@ -4,10 +4,11 @@ import { useMemo } from "react";
 import * as THREE from "three";
 import { site } from "@/content/site";
 import { cssVar, paintedTexture } from "@/lib/textures";
+import { DESK } from "./Desk";
 import { Hotspot } from "./Hotspot";
 
-// The 2019 CS 61A / 61B study notes: a wire wastebasket under the desk, overflowing,
-// with a few printed pages sticking out and a clipped stack on the floor beside it.
+// The 2019 CS 61A / 61B study notes sit in a clipped stack on the desk (the "notes" hotspot).
+// Under the desk, a wire wastebasket overflows with scrap paper, with a few loose pages on the floor beside it.
 
 const BIN = { x: 0.52, z: -0.24, r: 0.13, h: 0.3 };
 const paperColor = "#efe9da"; // a little yellowed with age
@@ -62,6 +63,26 @@ function notePage(course: string, title: string, coffee = false) {
   });
 }
 
+/** A scrap page: ruled lines and a few scribbles, nothing to read. */
+function scrapPage(seed: number) {
+  return paintedTexture(256, 362, (ctx, w, h) => {
+    ctx.fillStyle = paperColor;
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = "rgba(90,130,190,0.22)";
+    for (let y = 40; y < h; y += 18) ctx.fillRect(0, y, w, 1.5);
+    ctx.strokeStyle = "rgba(60,55,50,0.55)";
+    ctx.lineWidth = 2.5;
+    for (let i = 0; i < 6; i++) {
+      const y = 52 + ((i * 53 + seed * 31) % (h - 90));
+      const x0 = 20 + ((i * 17 + seed * 11) % 40);
+      ctx.beginPath();
+      ctx.moveTo(x0, y);
+      for (let x = x0; x < x0 + 80 + ((i * 29 + seed) % 100); x += 8) ctx.lineTo(x, y + Math.sin(x * 0.4 + i + seed) * 3);
+      ctx.stroke();
+    }
+  });
+}
+
 /** Crumpled paper: an icosphere with its vertices pushed around, flat-shaded so the folds catch light. */
 function crumpledGeometry(seed: number) {
   const g = new THREE.IcosahedronGeometry(1, 2);
@@ -102,18 +123,78 @@ function useWireTexture() {
   }, []);
 }
 
+/** The study notes on the desk: a clipped, slightly messy stack with a sticky note so people spot it. */
+export function DeskNotes() {
+  const [a, b] = site.notes.courses;
+  const pages = useMemo(() => [notePage(a.code, a.topics[0].title, true), notePage(b.code, b.topics[2].title)], [a, b]);
+  const sticky = useMemo(
+    () =>
+      paintedTexture(200, 200, (ctx, w, h) => {
+        ctx.fillStyle = "#ffe27a";
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = "rgba(0,0,0,0.06)";
+        ctx.fillRect(0, 0, w, 26);
+        ctx.fillStyle = "#3a2f1f";
+        ctx.textAlign = "center";
+        ctx.font = `52px ${cssVar("--font-hand", "cursive")}`;
+        ctx.fillText("CS notes", w / 2, 92);
+        ctx.font = `40px ${cssVar("--font-hand", "cursive")}`;
+        ctx.fillText("'19, take one!", w / 2, 148);
+      }),
+    [],
+  );
+  const T = DESK.top;
+  const n = 10;
+  const top = 0.002 + n * 0.0022;
+  return (
+    <Hotspot id="notes" labelPosition={[0.62, T + 0.07, -0.2]}>
+      <group position={[0.62, T, -0.2]} rotation={[0, -0.28, 0]}>
+        {Array.from({ length: n }, (_, i) => (
+          <mesh
+            key={i}
+            position={[((i * 5) % 3) * 0.002 - 0.002, 0.0011 + i * 0.0022, ((i * 7) % 3) * 0.002 - 0.002]}
+            rotation={[0, (i % 4) * 0.02 - 0.03, 0]}
+            receiveShadow
+            castShadow={i === n - 1}
+          >
+            <boxGeometry args={[0.2, 0.0018, 0.27]} />
+            <meshStandardMaterial color={i % 2 ? paperColor : "#f3eee2"} roughness={0.95} />
+          </mesh>
+        ))}
+        {/* 61A on top of the stack, a 61B page fanned out underneath it */}
+        <mesh position={[0.035, top - 0.0004, 0.02]} rotation={[-Math.PI / 2, 0, -0.22]} receiveShadow>
+          <planeGeometry args={[0.2, 0.27]} />
+          <meshStandardMaterial map={pages[1].tex} roughness={0.9} />
+        </mesh>
+        <mesh position={[0, top + 0.0006, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+          <planeGeometry args={[0.2, 0.27]} />
+          <meshStandardMaterial map={pages[0].tex} roughness={0.9} />
+        </mesh>
+        {/* sticky note */}
+        <mesh position={[0.05, top + 0.0012, 0.085]} rotation={[-Math.PI / 2, 0, 0.12]}>
+          <planeGeometry args={[0.075, 0.075]} />
+          <meshStandardMaterial map={sticky.tex} roughness={0.85} />
+        </mesh>
+        {/* binder clip */}
+        <mesh position={[0, top / 2 + 0.002, -0.133]} castShadow>
+          <boxGeometry args={[0.04, top + 0.008, 0.02]} />
+          <meshStandardMaterial color="#111" metalness={0.6} roughness={0.35} />
+        </mesh>
+        {[-1, 1].map((k) => (
+          <mesh key={k} position={[k * 0.012, top + 0.012, -0.148]} rotation={[0.9, 0, 0]}>
+            <torusGeometry args={[0.012, 0.0015, 6, 16, Math.PI]} />
+            <meshStandardMaterial color="#c7c9cc" metalness={1} roughness={0.25} />
+          </mesh>
+        ))}
+      </group>
+    </Hotspot>
+  );
+}
+
+/** The wastebasket under the desk: scrap paper only, not clickable. */
 export function NotesPile() {
   const wire = useWireTexture();
-  const [a, b] = site.notes.courses;
-  const pages = useMemo(
-    () => [
-      notePage(a.code, a.topics[0].title, true),
-      notePage(b.code, b.topics[5].title),
-      notePage(a.code, a.topics[7].title),
-      notePage(b.code, b.topics[2].title),
-    ],
-    [a, b],
-  );
+  const pages = useMemo(() => [1, 2, 3, 4].map(scrapPage), []);
   const balls = useMemo(() => [1, 2, 3, 4, 5, 6, 7].map(crumpledGeometry), []);
   const paper = <meshStandardMaterial color={paperColor} roughness={0.92} flatShading />;
 
@@ -129,7 +210,7 @@ export function NotesPile() {
   ];
 
   return (
-    <Hotspot id="notes" labelPosition={[BIN.x, BIN.h + 0.16, BIN.z]} lift={0}>
+    <group>
       <group position={[BIN.x, 0, BIN.z]}>
         {/* wire mesh wastebasket */}
         <mesh position={[0, BIN.h / 2, 0]} castShadow receiveShadow>
@@ -186,6 +267,6 @@ export function NotesPile() {
           </mesh>
         ))}
       </group>
-    </Hotspot>
+    </group>
   );
 }

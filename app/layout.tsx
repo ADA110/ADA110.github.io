@@ -9,6 +9,7 @@ const serif = Instrument_Serif({ variable: "--font-serif", subsets: ["latin"], w
 const hand = Caveat({ variable: "--font-hand", subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://ada110.github.io"),
   title: { default: site.name, template: `%s · ${site.name}` },
   description: site.tagline,
 };
