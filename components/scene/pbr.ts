@@ -1,28 +1,21 @@
 "use client";
 
-import { useGLTF, useTexture } from "@react-three/drei";
+import { useEnvironment, useGLTF, useTexture } from "@react-three/drei";
 import { useMemo } from "react";
 import * as THREE from "three";
+import { ALL_TEXTURE_URLS, ENV_URL, MODEL_NAMES, materialUrls, modelUrl, type ScannedMaterial } from "@/lib/assets";
 
-/** Photo-scanned CC0 materials from Poly Haven, compressed into public/textures/<name>/{diff,nor,rough}.webp. */
-export type ScannedMaterial =
-  | "walnut_veneer"
-  | "wood_floor"
-  | "plastered_wall_04"
-  | "poly_wool_herringbone"
-  | "brown_leather"
-  | "caban"
-  | "white_oak_veneer"
-  | "rough_linen";
-
-const paths = (name: ScannedMaterial) => ["diff", "nor", "rough"].map((m) => `/textures/${name}/${m}.webp`);
+export type { ScannedMaterial };
 
 /**
  * Albedo / normal / roughness maps for a scanned material, tiled `repeat` times.
  * Textures are cloned per call so different surfaces can tile differently.
+ * Relief-only materials return no `map`.
  */
 export function useScanned(name: ScannedMaterial, repeat: [number, number] = [1, 1], rotation = 0) {
-  const [diff, nor, rough] = useTexture(paths(name));
+  const loaded = useTexture(materialUrls(name));
+  const diff = loaded.length === 3 ? loaded[0] : null;
+  const [nor, rough] = loaded.slice(-2);
   return useMemo(() => {
     const set = (t: THREE.Texture, srgb: boolean) => {
       const c = t.clone();
@@ -34,13 +27,13 @@ export function useScanned(name: ScannedMaterial, repeat: [number, number] = [1,
       c.needsUpdate = true;
       return c;
     };
-    return { map: set(diff, true), normalMap: set(nor, false), roughnessMap: set(rough, false) };
+    return { map: diff ? set(diff, true) : null, normalMap: set(nor, false), roughnessMap: set(rough, false) };
   }, [diff, nor, rough, repeat[0], repeat[1], rotation]); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
 /** Scanned 3D models (meshopt-compressed GLB) — the decoder ships with three, no CDN needed. */
 export function useModel(name: string) {
-  return useGLTF(`/models/${name}.glb`, false, true);
+  return useGLTF(modelUrl(name), false, true);
 }
 
 /**
@@ -84,14 +77,7 @@ export function withArtwork<M extends THREE.Material | THREE.Material[]>(materia
   return (Array.isArray(material) ? material.map(swap) : swap(material)) as M;
 }
 
-export const MODELS = [
-  "desk_lamp_arm_01",
-  "potted_plant_04",
-  "standing_picture_frame_01",
-  "hanging_picture_frame_01",
-  "Lantern_01",
-  "stationery_supplies",
-  "binder_notebook",
-  "sleeping_dog",
-];
-MODELS.forEach((m) => useGLTF.preload(`/models/${m}.glb`, false, true));
+// Start every download as soon as this module loads, all in parallel (no per-component waterfall).
+MODEL_NAMES.forEach((m) => useGLTF.preload(modelUrl(m), false, true));
+useTexture.preload(ALL_TEXTURE_URLS);
+useEnvironment.preload({ files: ENV_URL });

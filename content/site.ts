@@ -165,15 +165,6 @@ export const site = {
     ],
   },
 
-  // Third-party assets that require attribution.
-  credits: [
-    {
-      text: "Sleeping dog scan by thuberchs",
-      href: "https://sketchfab.com/3d-models/sleeping-dog-01-91e169740c91489bbd9cec755c4fdcca",
-      license: "CC BY 4.0",
-    },
-  ],
-
   // Shown when you click the headphones.
   onRepeat: [
     { title: "Placeholder Song", artist: "Some Artist" },

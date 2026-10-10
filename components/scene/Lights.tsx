@@ -5,6 +5,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
+import { ENV_URL } from "@/lib/assets";
 import { lightning, skyState } from "@/lib/sky";
 import { useStore } from "@/lib/store";
 import { placeHour, withCondition } from "@/lib/weather";
@@ -87,7 +88,7 @@ export function Lights() {
         intensity={2.2}
       />
       {/* Reflections from a real, photographed room (Poly Haven "small_empty_room_1", CC0). */}
-      <Environment files="/env/room.hdr" environmentRotation={[0, Math.PI / 2, 0]} />
+      <Environment files={ENV_URL} environmentRotation={[0, Math.PI / 2, 0]} />
     </>
   );
 }

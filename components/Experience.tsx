@@ -14,7 +14,10 @@ import { Nav } from "./ui/Nav";
 import { Panel } from "./ui/Panel";
 import { TextVersion } from "./ui/TextVersion";
 
-const Scene = dynamic(() => import("./scene/Scene"), { ssr: false });
+const loadScene = () => import("./scene/Scene");
+// Fetch the 3D code as soon as this module runs, rather than waiting for the first render.
+if (typeof window !== "undefined") void loadScene();
+const Scene = dynamic(loadScene, { ssr: false });
 const NAV = SECTIONS.filter((s) => s.inNav);
 
 function read(key: string) {
@@ -112,9 +115,9 @@ export function Experience() {
     if (!sceneReady) return;
     const reduced = useStore.getState().reducedMotion;
     const timers = [
-      setTimeout(() => set({ lampOn: read("desk:lamp") !== "off" }), reduced ? 0 : 1100),
-      setTimeout(() => set({ introDone: true, labelHint: true }), reduced ? 0 : 1700),
-      setTimeout(() => set({ labelHint: false }), reduced ? 4000 : 5200),
+      setTimeout(() => set({ lampOn: read("desk:lamp") !== "off" }), reduced ? 0 : 450),
+      setTimeout(() => set({ introDone: true, labelHint: true }), reduced ? 0 : 900),
+      setTimeout(() => set({ labelHint: false }), reduced ? 4000 : 4400),
     ];
     return () => timers.forEach(clearTimeout);
   }, [sceneReady, set]);

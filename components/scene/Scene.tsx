@@ -1,13 +1,12 @@
 "use client";
 
-import { PerformanceMonitor, SoftShadows } from "@react-three/drei";
+import { PerformanceMonitor } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Suspense, useRef } from "react";
 import { HOME_CAMERA } from "@/lib/sections";
 import { useStore } from "@/lib/store";
 import { CameraRig } from "./CameraRig";
 import { Desk } from "./Desk";
-import { DogBed } from "./DogBed";
 import { Dust } from "./Dust";
 import { Effects } from "./Effects";
 import { LabelProjector } from "./Hotspot";
@@ -25,13 +24,14 @@ import { WeatherClock } from "./WeatherClock";
 function ReadySignal() {
   const frames = useRef(0);
   useFrame(() => {
-    if (++frames.current === 4) useStore.getState().set({ sceneReady: true });
+    if (++frames.current === 3) useStore.getState().set({ sceneReady: true });
   });
   return null;
 }
 
 export default function Scene() {
   const quality = useStore((s) => s.quality);
+  const sceneReady = useStore((s) => s.sceneReady);
   return (
     <Canvas
       className="scene-canvas"
@@ -45,8 +45,8 @@ export default function Scene() {
         if (section) go(null);
       }}
     >
-      <PerformanceMonitor onDecline={() => useStore.getState().set({ quality: "low" })} />
-      <SoftShadows size={16} samples={10} focus={0.4} />
+      {/* Only judge frame rate once loading is over — startup work would read as a slow device. */}
+      {sceneReady && <PerformanceMonitor onDecline={() => useStore.getState().set({ quality: "low" })} />}
       <Suspense fallback={null}>
         <Room />
         <Desk />
@@ -57,7 +57,6 @@ export default function Scene() {
         <WeatherClock />
         <Outdoors />
         <NotesPile />
-        <DogBed />
         <Dust />
         <Lights />
         <CameraRig />

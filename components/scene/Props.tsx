@@ -229,6 +229,13 @@ function DeskPlant() {
   return <primitive object={plant} position={[-0.47, T, -0.4]} rotation={[0, 0.6, 0]} />;
 }
 
+/** Arrowhead plant in a terracotta pot, on the floor under the window. */
+function FloorPlant() {
+  const { scene } = useModel("potted_plant_02");
+  const plant = useShadowClone(scene);
+  return <primitive object={plant} position={[-1.22, 0, 0.72]} rotation={[0, 2.2, 0]} scale={0.95} />;
+}
+
 // ---------------- Picture frame (Poly Haven scan, our own print inside) ----------------
 
 function PictureFrame() {
@@ -268,6 +275,7 @@ export function Props() {
     <>
       <Mug />
       <DeskPlant />
+      <FloorPlant />
       <Headphones />
       <Phone />
       <PictureFrame />
