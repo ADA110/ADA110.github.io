@@ -215,7 +215,7 @@ function TrailMap() {
         ctx.fillText("Out There", 22, h - 32);
         ctx.font = `500 13px ${cssVar("--font-geist-mono", "monospace")}`;
         ctx.fillStyle = "#7a6650";
-        ctx.fillText("37.44° N · 122.14° W", 22, h - 12);
+        ctx.fillText("48.71° N · 121.13° W", 22, h - 12);
         ctx.textAlign = "right";
         ctx.fillText(site.outdoors.activities.map((a) => a.name).join(" · ").toUpperCase(), w - 22, h - 12);
       }),

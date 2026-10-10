@@ -119,13 +119,12 @@ export const site = {
   // The gear corner: paddle, pack, boots and trail map.
   outdoors: {
     intro:
-      "When I'm not at this desk, I'm usually outside. The Bay Area makes it easy: redwoods, coastline and mountains are all within a couple of hours.",
+      "I'm from Seattle, and I really love nature. The Pacific Northwest is where I learned to camp, hike and paddle, and these are some of the places that captured my heart.",
     activities: [
-      { name: "Camping", emoji: "🏕️", note: "Placeholder: favorite campground or best trip." },
-      { name: "Hiking", emoji: "🥾", note: "Placeholder: a trail you love, or a summit you're proud of." },
-      { name: "Kayaking", emoji: "🛶", note: "Placeholder: where you paddle (bay, lakes, coast?)" },
+      { name: "Camping", emoji: "🏕️", label: "Favorite campground", place: "Colonial Creek Campground", where: "North Cascades National Park, WA" },
+      { name: "Hiking", emoji: "🥾", label: "Favorite hike", place: "Mount Storm King Trail", where: "Lake Crescent, Olympic National Park, WA" },
+      { name: "Kayaking", emoji: "🛶", label: "Favorite paddle", place: "Diablo Lake", where: "North Cascades, WA" },
     ],
-    bucketList: ["Placeholder: a dream trip", "Placeholder: a big summit", "Placeholder: a multi-day paddle"],
   },
 
   // The paper pile under the desk: study notes from the 2019 site, kept at their original URLs.

@@ -95,19 +95,12 @@ function Outdoors() {
             {a.emoji}
           </span>
           <div>
-            <h3>{a.name}</h3>
-            <p className="muted">{a.note}</p>
+            <span className="eyebrow">{a.label}</span>
+            <h3>{a.place}</h3>
+            <p className="muted">{a.where}</p>
           </div>
         </div>
       ))}
-      <section>
-        <h3 className="eyebrow">Bucket list</h3>
-        <ul className="checklist">
-          {site.outdoors.bucketList.map((b) => (
-            <li key={b}>{b}</li>
-          ))}
-        </ul>
-      </section>
     </div>
   );
 }
