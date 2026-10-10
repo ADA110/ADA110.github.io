@@ -86,12 +86,12 @@ export function withArtwork<M extends THREE.Material | THREE.Material[]>(materia
 
 export const MODELS = [
   "desk_lamp_arm_01",
-  "potted_plant_02",
   "potted_plant_04",
   "standing_picture_frame_01",
   "hanging_picture_frame_01",
   "Lantern_01",
   "stationery_supplies",
   "binder_notebook",
+  "sleeping_dog",
 ];
 MODELS.forEach((m) => useGLTF.preload(`/models/${m}.glb`, false, true));

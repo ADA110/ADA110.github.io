@@ -36,6 +36,10 @@ corkboard cards, book spines, the monitor's project grid, and the phone notifica
 - **Asset pipeline:** models are compressed with glTF Transform (meshopt geometry, WebP textures):
   `npx gltf-transform optimize in.gltf public/models/out.glb --compress meshopt --texture-compress webp --texture-size 1024 --join false --flatten false`.
   Textures: `node scripts/compress-textures.mjs <dir>`. Inspect a model's parts with `node scripts/inspect-gltf.mjs` / `scripts/prim-bounds.mjs`.
+- **Sleeping dog:** "Sleeping dog 01" by [thuberchs](https://sketchfab.com/thuberchs) on
+  [Sketchfab](https://sketchfab.com/3d-models/sleeping-dog-01-91e169740c91489bbd9cec755c4fdcca), CC BY 4.0. Cut out of its
+  ground scan with `node scripts/extract-scan.mjs <scene.gltf> <out.glb>`, then `gltf-transform meshopt`. It breathes via a
+  small vertex-shader displacement (`components/scene/DogBed.tsx`).
 - Debug any camera framing with `?cam=x,y,z,targetX,targetY,targetZ`.
 - Lighting: lamp spotlight with soft (PCSS) shadows, sunlight through the window that follows the
   visitor's local time, monitor glow (RectAreaLight), and a procedural environment for reflections.

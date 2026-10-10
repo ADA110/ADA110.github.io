@@ -263,8 +263,8 @@ export function Outdoors() {
       <Hotspot id="outdoors" labelPosition={[-1.12, 0.9, -0.3]} lift={0}>
         <Paddle />
         <Backpack />
-        <Boot position={[-1.17, 0, -0.05]} rotation={Math.PI + 0.35} />
-        <Boot position={[-0.99, 0, 0.02]} rotation={Math.PI - 0.12} />
+        <Boot position={[-1.17, 0, -0.14]} rotation={Math.PI + 0.35} />
+        <Boot position={[-0.99, 0, -0.1]} rotation={Math.PI - 0.12} />
         <TrailMap />
       </Hotspot>
       <Lantern />

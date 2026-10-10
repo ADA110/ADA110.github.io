@@ -105,10 +105,10 @@ void main() {
   float golden = clamp(exp(-pow(h - uRise - 0.25, 2.0) / 0.35) + exp(-pow(h - uSet + 0.15, 2.0) / 0.35), 0.0, 1.0) * (1.0 - overcast * 0.7);
 
   // ---- sky gradient
-  float g = smoothstep(0.6, 3.2, p.y);
+  float g = smoothstep(0.2, 2.6, p.y);
   // Overcast skies go flat grey; rain clouds are heavier and darker.
-  vec3 dayTop = mix(vec3(0.16, 0.38, 0.95), mix(vec3(0.42, 0.45, 0.5), vec3(0.17, 0.19, 0.22), uRain), overcast);
-  vec3 dayBot = mix(vec3(0.62, 0.78, 1.0) * 1.15, mix(vec3(0.66, 0.68, 0.7), vec3(0.32, 0.34, 0.37), uRain), overcast);
+  vec3 dayTop = mix(vec3(0.05, 0.22, 0.78), mix(vec3(0.42, 0.45, 0.5), vec3(0.17, 0.19, 0.22), uRain), overcast);
+  vec3 dayBot = mix(vec3(0.28, 0.52, 0.95), mix(vec3(0.66, 0.68, 0.7), vec3(0.32, 0.34, 0.37), uRain), overcast);
   vec3 nightTop = vec3(0.004, 0.008, 0.03);
   vec3 nightBot = vec3(0.02, 0.03, 0.07) + vec3(0.03, 0.02, 0.01) * overcast; // city glow on clouds
   vec3 goldTop = vec3(0.32, 0.3, 0.6);

@@ -55,6 +55,17 @@ function About() {
           </div>
         ))}
       </dl>
+      <p className="muted small credits">
+        Room assets: Poly Haven (CC0).{" "}
+        {site.credits.map((c) => (
+          <span key={c.href}>
+            <a href={c.href} target="_blank" rel="noreferrer">
+              {c.text}
+            </a>{" "}
+            ({c.license}).
+          </span>
+        ))}
+      </p>
     </div>
   );
 }
