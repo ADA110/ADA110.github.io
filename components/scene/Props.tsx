@@ -240,22 +240,16 @@ function FloorPlant() {
 
 function PictureFrame() {
   const { scene } = useModel("standing_picture_frame_01");
+  // The profile photo, printed on a cream mat (drawn into a canvas so it's ready the moment it loads).
   const photo = useMemo(() => {
+    const img = new Image();
     const p = paintedTexture(400, 560, (ctx, w, h) => {
       ctx.fillStyle = "#f3efe6";
       ctx.fillRect(0, 0, w, h);
-      const g = ctx.createLinearGradient(0, 40, 0, h - 40);
-      g.addColorStop(0, "#284b8f");
-      g.addColorStop(1, "#d9643a");
-      ctx.fillStyle = g;
-      ctx.fillRect(40, 40, w - 80, h - 80);
-      ctx.fillStyle = "rgba(255,255,255,0.95)";
-      ctx.textAlign = "center";
-      ctx.font = `400 150px ${cssVar("--font-serif", "serif")}`;
-      ctx.fillText(site.initials, w / 2, h / 2 + 50);
-      ctx.font = `400 22px ${cssVar("--font-geist-sans", "sans-serif")}`;
-      ctx.fillText("photo coming soon", w / 2, h - 80);
+      if (img.complete && img.naturalWidth) ctx.drawImage(img, 34, 34, w - 68, h - 68);
     });
+    img.onload = p.redraw;
+    img.src = site.photo.portrait;
     p.tex.flipY = false; // glTF UV convention
     return p;
   }, []);

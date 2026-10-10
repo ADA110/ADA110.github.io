@@ -457,17 +457,13 @@ kbd {
   gap: 14px;
   align-items: center;
 }
-.monogram {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
-  display: grid;
-  place-items: center;
-  font-family: var(--font-serif), serif;
-  font-size: 1.9rem;
-  color: #fff;
-  background: linear-gradient(160deg, #284b8f, #d9643a);
+.about-photo {
+  width: 96px;
+  height: 96px;
+  border-radius: 20px;
+  object-fit: cover;
   flex: none;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
 }
 .facts {
   display: grid;

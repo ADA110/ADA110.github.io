@@ -5,9 +5,10 @@
 export const site = {
   name: "Abhinav Ashar",
   initials: "AA",
+  photo: { square: "/images/profile-square.webp", portrait: "/images/profile-portrait.webp" },
   role: "Software Engineer",
   tagline: "I build thoughtful software — and the occasional 3D desk.",
-  location: "San Francisco, CA",
+  location: "Stanford, CA",
   email: "hello@example.com",
   resumeUrl: "/resume.pdf",
   socials: [
@@ -22,7 +23,7 @@ export const site = {
       "I like working where engineering meets craft: systems that are fast and reliable, and interfaces that feel good to use. (Placeholder bio — the real one is coming soon.)",
     ],
     facts: [
-      { label: "Based in", value: "San Francisco, CA" },
+      { label: "Based in", value: "Stanford, CA" },
       { label: "Focus", value: "Full-stack · Graphics · AI" },
       { label: "Currently", value: "Building this website" },
       { label: "Fuel", value: "Too much coffee" },

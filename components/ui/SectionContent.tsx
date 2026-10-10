@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { site } from "@/content/site";
 import { WeatherNow } from "./WeatherNow";
@@ -18,9 +19,7 @@ function About() {
   return (
     <div className="stack">
       <div className="about-head">
-        <div className="monogram" aria-hidden>
-          {site.initials}
-        </div>
+        <Image className="about-photo" src={site.photo.square} alt={site.name} width={400} height={400} priority />
         <div>
           <p className="lead">{site.name}</p>
           <p className="muted">
