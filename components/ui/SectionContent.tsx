@@ -101,6 +101,16 @@ function Outdoors() {
           </div>
         </div>
       ))}
+      <section>
+        <h3 className="eyebrow">Bucket list</h3>
+        <ul className="checklist">
+          {site.outdoors.bucketList.map((b) => (
+            <li key={b.place}>
+              {b.place} <span className="muted">· {b.where}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }

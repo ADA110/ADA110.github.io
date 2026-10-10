@@ -32,39 +32,46 @@ export const site = {
 
   projects: [
     {
+      title: "GSB Housing",
+      year: "2026",
+      blurb:
+        "A housing board for Stanford GSB MBA students to find sublets and connect with classmates looking for a place. Sign-in is verified with a Stanford email code, and the API is rate-limited and covered by tests.",
+      tags: ["React", "Express", "Postgres", "Vercel"],
+      links: [
+        { label: "Live", href: "https://gsb-housing.vercel.app" },
+        { label: "Code", href: "https://github.com/ADA110/gsb_housing" },
+      ],
+      color: "#8c1515",
+    },
+    {
       title: "This Website",
       year: "2026",
       blurb:
         "A hand-painted, Ghibli-style 3D room built with React Three Fiber: cel shading and line art drawn in real time, a sky driven by live Palo Alto weather, and synthesized sound.",
       tags: ["Three.js", "R3F", "GLSL", "Next.js"],
-      links: [{ label: "Source", href: "https://github.com/" }],
+      links: [{ label: "Code", href: "https://github.com/ADA110/ADA110.github.io" }],
       color: "#3b6cf6",
     },
     {
-      title: "Project Two",
-      year: "2025",
+      title: "Agents Workshop",
+      year: "2026",
       blurb:
-        "Placeholder project. Describe the problem, what you built, and the impact. Numbers are great (e.g. cut latency 40%, 10k users).",
-      tags: ["TypeScript", "Postgres", "AWS"],
-      links: [{ label: "Live", href: "https://example.com" }],
+        "A hands-on workshop that teaches multi-agent AI. Students build a Claude Code team (a manager plus Researcher, Writer and Editor agents) that drafts a real cold email, guided step by step by this site, with an instructor console that tracks everyone's progress.",
+      tags: ["Claude Code", "Multi-agent", "Vercel", "Redis"],
+      links: [
+        { label: "Live", href: "https://agents-outreach-team.vercel.app" },
+        { label: "Code", href: "https://github.com/ADA110/outreach-workshop-site" },
+      ],
       color: "#e2683c",
     },
     {
-      title: "Project Three",
-      year: "2025",
+      title: "Canvas MCP",
+      year: "2026",
       blurb:
-        "Placeholder project. A short, specific description of what you personally did beats a long list of technologies.",
-      tags: ["Python", "PyTorch"],
-      links: [{ label: "Code", href: "https://github.com/" }],
+        "An MCP server that connects Claude to Canvas, so you can ask about your courses, assignments, modules, announcements and upcoming due dates in plain English.",
+      tags: ["TypeScript", "MCP", "Canvas API"],
+      links: [{ label: "Code", href: "https://github.com/ADA110/canvas-mcp" }],
       color: "#16a37f",
-    },
-    {
-      title: "Project Four",
-      year: "2024",
-      blurb: "Placeholder project. Swap me out for something you're proud of.",
-      tags: ["Swift", "iOS"],
-      links: [],
-      color: "#a855f7",
     },
   ],
 
@@ -119,11 +126,16 @@ export const site = {
   // The gear corner: paddle, pack, boots and trail map.
   outdoors: {
     intro:
-      "I'm from Seattle, and I really love nature. The Pacific Northwest is where I learned to camp, hike and paddle, and these are some of the places that captured my heart.",
+      "I'm from Seattle, and I really love nature. The Pacific Northwest is where I learned to camp, hike and kayak, and these are some of the places that captured my heart.",
     activities: [
       { name: "Camping", emoji: "🏕️", label: "Favorite campground", place: "Colonial Creek Campground", where: "North Cascades National Park, WA" },
       { name: "Hiking", emoji: "🥾", label: "Favorite hike", place: "Mount Storm King Trail", where: "Lake Crescent, Olympic National Park, WA" },
-      { name: "Kayaking", emoji: "🛶", label: "Favorite paddle", place: "Diablo Lake", where: "North Cascades, WA" },
+      { name: "Kayaking", emoji: "🛶", label: "Favorite kayaking spot", place: "Diablo Lake", where: "North Cascades, WA" },
+    ],
+    bucketList: [
+      { place: "Glacier National Park", where: "Montana" },
+      { place: "Banff National Park", where: "Alberta, Canada" },
+      { place: "Acadia National Park", where: "Maine" },
     ],
   },
 
