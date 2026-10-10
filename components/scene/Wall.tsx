@@ -49,12 +49,12 @@ function Corkboard() {
           const hand = cssVar("--font-hand", "cursive");
           ctx.fillStyle = "#1c2a4a";
           ctx.font = `700 34px ${hand}`;
-          wrapText(ctx, job.company, 18, 44, W - 36, 34, 1);
+          wrapText(ctx, job.short ?? job.company, 18, 44, W - 36, 34, 1);
           ctx.font = `30px ${hand}`;
           const yy = wrapText(ctx, job.role, 18, 120, W - 36, 34, 2);
           ctx.fillStyle = "#b03a2e";
           ctx.font = `26px ${hand}`;
-          ctx.fillText(job.dates, 18, Math.min(yy + 8, H - 20));
+          ctx.fillText(job.dates ?? job.location ?? "", 18, Math.min(yy + 8, H - 20));
         }),
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -281,7 +281,7 @@ function Printer() {
         ctx.fillText(site.name, 34, 60);
         ctx.fillStyle = "#666";
         ctx.font = `400 16px ${cssVar("--font-geist-sans", "sans-serif")}`;
-        ctx.fillText(`${site.role} · ${site.email}`, 34, 86);
+        ctx.fillText(site.email, 34, 86);
         ctx.fillStyle = "#ccc";
         for (let i = 0; i < 14; i++) {
           const y = 128 + i * 28 + Math.floor(i / 4) * 16;

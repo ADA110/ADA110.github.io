@@ -17,7 +17,6 @@ export const MONITOR = { x: 0, y: 1.065, z: -0.33, w: 0.6, h: 0.3375 };
 const CODE: [string, string][][] = [
   [["kw", "const "], ["var", "me"], ["op", " = {"]],
   [["key", "  name"], ["op", ": "], ["str", `"${site.name}"`], ["op", ","]],
-  [["key", "  role"], ["op", ": "], ["str", `"${site.role}"`], ["op", ","]],
   [["key", "  based"], ["op", ": "], ["str", `"${site.location}"`], ["op", ","]],
   [["key", "  loves"], ["op", ": ["], ["str", '"3D"'], ["op", ", "], ["str", '"systems"'], ["op", ", "], ["str", '"coffee"'], ["op", "],"]],
   [["key", "  status"], ["op", ": "], ["str", '"open to cool problems"'], ["op", ","]],

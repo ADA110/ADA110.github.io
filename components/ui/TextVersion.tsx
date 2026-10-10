@@ -12,7 +12,6 @@ export function TextVersion() {
   return (
     <main className="text-version">
       <header>
-        <p className="eyebrow">{site.role}</p>
         <h1>{site.name}</h1>
         <p className="lead">{site.tagline}</p>
         {webgl ? (

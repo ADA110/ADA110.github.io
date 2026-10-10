@@ -3,10 +3,9 @@
 // Everything below is PLACEHOLDER content until the real resume is dropped in.
 
 export const site = {
-  name: "Abhinav Ashar",
+  name: "Abhi Ashar",
   initials: "AA",
   photo: { square: "/images/profile-square.webp", portrait: "/images/profile-portrait.webp" },
-  role: "Software Engineer",
   tagline: "I build thoughtful software — and the occasional 3D desk.",
   location: "Stanford, CA",
   email: "hello@example.com",
@@ -19,7 +18,7 @@ export const site = {
 
   about: {
     paragraphs: [
-      "Hi, I'm Abhinav. This is my desk — or at least a very convincing digital twin of one. Everything here is clickable, and every section is also one tap away in the menu.",
+      "Hi, I'm Abhi. This is my desk — or at least a very convincing digital twin of one. Everything here is clickable, and every section is also one tap away in the menu.",
       "I like working where engineering meets craft: systems that are fast and reliable, and interfaces that feel good to use. (Placeholder bio — the real one is coming soon.)",
     ],
     facts: [
@@ -68,35 +67,38 @@ export const site = {
     },
   ],
 
+  // Newest first. `dates` and `location` are both optional; whichever exist are shown together.
+  // `short` is an optional shorter name for the corkboard cards.
   experience: [
     {
+      role: "MBA",
+      company: "Stanford Graduate School of Business",
+      short: "Stanford GSB", // fits the corkboard card
+      dates: "2025 — Present",
+      location: "Stanford, CA",
+      bullets: ["MBA candidate, Class of 2027."],
+    },
+    {
+      role: "Applied AI Product Manager",
+      company: "Google Cloud",
+      dates: "Jun — Sep 2026",
+      bullets: ["Product manager on applied AI in Google Cloud for the summer."],
+    },
+    {
       role: "Software Engineer",
-      company: "Company One",
-      dates: "2024 — Present",
-      bullets: [
-        "Placeholder: led X, which improved Y by Z%.",
-        "Placeholder: built and shipped a feature used by N people.",
-      ],
+      company: "Amazon",
+      dates: "2021 — 2025",
+      location: "Seattle, WA",
+      bullets: ["Software engineer focused on AI and data."],
     },
     {
-      role: "Software Engineering Intern",
-      company: "Company Two",
-      dates: "Summer 2023",
-      bullets: ["Placeholder: what you built, and why it mattered."],
+      role: "EECS + Business, M.E.T. Program",
+      company: "UC Berkeley",
+      dates: "2017 — 2021",
+      location: "Berkeley, CA",
+      bullets: ["Management, Entrepreneurship & Technology (M.E.T.): electrical engineering & computer sciences plus business."],
     },
-    {
-      role: "Research Assistant",
-      company: "University Lab",
-      dates: "2022 — 2023",
-      bullets: ["Placeholder: research topic and outcome."],
-    },
-    {
-      role: "B.S. Computer Science",
-      company: "University",
-      dates: "2020 — 2024",
-      bullets: ["Placeholder: honors, activities, relevant coursework."],
-    },
-  ],
+  ] as { role: string; company: string; short?: string; dates?: string; location?: string; bullets: string[] }[],
 
   skills: [
     {

@@ -1,4 +1,4 @@
-# Abhinav's desk
+# Abhi's desk
 
 A personal website that is a hand-painted, anime-style 3D desk. Click an object to read about it:
 

@@ -194,11 +194,6 @@ kbd {
   font-family: var(--font-serif), serif;
   font-size: 1.55rem;
 }
-.brand-role {
-  font-size: 0.78rem;
-  opacity: 0.75;
-  letter-spacing: 0.04em;
-}
 .nav-links {
   display: flex;
   gap: 2px;

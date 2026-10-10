@@ -23,7 +23,7 @@ function About() {
         <div>
           <p className="lead">{site.name}</p>
           <p className="muted">
-            {site.role} · {site.location}
+            {site.location}
           </p>
         </div>
       </div>
@@ -154,7 +154,7 @@ function Experience() {
       {site.experience.map((job) => (
         <li key={job.role + job.company}>
           <div className="dot" aria-hidden />
-          <p className="muted small">{job.dates}</p>
+          <p className="muted small">{[job.dates, job.location].filter(Boolean).join(" · ")}</p>
           <h3>{job.role}</h3>
           <p className="company">{job.company}</p>
           <ul>
