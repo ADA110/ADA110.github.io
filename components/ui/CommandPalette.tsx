@@ -44,7 +44,7 @@ function Palette() {
         run: () => void navigator.clipboard?.writeText(email),
       })),
       { id: "pdf", label: "Download resume", hint: "PDF", group: "Actions", run: () => window.open(site.resumeUrl, "_blank") },
-      { id: "text", label: "Text-only version", hint: "No 3D, just the content", group: "Actions", run: () => set({ textMode: true }) },
+      { id: "text", label: "Text-only version", hint: "Just the content, no desk", group: "Actions", run: () => set({ textMode: true }) },
     ];
   }, [set]);
 

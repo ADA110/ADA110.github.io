@@ -7,7 +7,7 @@ export const site = {
   name: "Abhi Ashar",
   initials: "AA",
   photo: { square: "/images/profile-square.webp", portrait: "/images/profile-portrait.webp" },
-  tagline: "I build thoughtful software, and the occasional 3D desk.",
+  tagline: "I ideate and build AI products, and the occasional digital desk.",
   location: "Stanford, CA",
   emails: ["aashar@stanford.edu", "abhinav.ashar2@gmail.com"],
   resumeUrl: "/resume.pdf",

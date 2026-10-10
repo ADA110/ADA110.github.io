@@ -16,10 +16,10 @@ export function TextVersion() {
         <p className="lead">{site.tagline}</p>
         {webgl ? (
           <button className="btn" onClick={() => set({ textMode: false })}>
-            ← Back to the 3D desk
+            ← Back to the desk
           </button>
         ) : (
-          <p className="muted small">Your browser can’t show the 3D desk, so here’s everything as plain text.</p>
+          <p className="muted small">Your browser can’t show the interactive desk, so here’s everything as plain text.</p>
         )}
       </header>
       {SECTIONS.map((s) => (
