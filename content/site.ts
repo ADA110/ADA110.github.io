@@ -10,9 +10,10 @@ export const site = {
   location: "Stanford, CA",
   email: "hello@example.com",
   resumeUrl: "/resume.pdf",
+  linkedin: "https://www.linkedin.com/in/abhinavashar/",
   socials: [
     { label: "GitHub", href: "https://github.com/" },
-    { label: "LinkedIn", href: "https://www.linkedin.com/" },
+    { label: "LinkedIn", href: "https://www.linkedin.com/in/abhinavashar/" },
     { label: "X / Twitter", href: "https://x.com/" },
   ],
 

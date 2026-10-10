@@ -150,21 +150,31 @@ function Projects() {
 
 function Experience() {
   return (
-    <ol className="timeline">
-      {site.experience.map((job) => (
-        <li key={job.role + job.company}>
-          <div className="dot" aria-hidden />
-          <p className="muted small">{[job.dates, job.location].filter(Boolean).join(" · ")}</p>
-          <h3>{job.role}</h3>
-          <p className="company">{job.company}</p>
-          <ul>
-            {job.bullets.map((b, i) => (
-              <li key={i}>{b}</li>
-            ))}
-          </ul>
-        </li>
-      ))}
-    </ol>
+    <div className="stack">
+      <ol className="timeline">
+        {site.experience.map((job) => (
+          <li key={job.role + job.company}>
+            <div className="dot" aria-hidden />
+            <p className="muted small">{[job.dates, job.location].filter(Boolean).join(" · ")}</p>
+            <h3>{job.role}</h3>
+            <p className="company">{job.company}</p>
+            <ul>
+              {job.bullets.map((b, i) => (
+                <li key={i}>{b}</li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ol>
+      <a className="card offclock" href={site.linkedin} target="_blank" rel="noreferrer">
+        <span aria-hidden>in</span>
+        <span>
+          <strong>The full story</strong>
+          <span className="muted"> — all my experience on LinkedIn</span>
+        </span>
+        <span aria-hidden>↗</span>
+      </a>
+    </div>
   );
 }
 
