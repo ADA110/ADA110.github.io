@@ -164,11 +164,13 @@ function Experience() {
             <p className="muted small">{[job.dates, job.location].filter(Boolean).join(" · ")}</p>
             <h3>{job.role}</h3>
             <p className="company">{job.company}</p>
-            <ul>
-              {job.bullets.map((b, i) => (
-                <li key={i}>{b}</li>
-              ))}
-            </ul>
+            {job.bullets && (
+              <ul>
+                {job.bullets.map((b, i) => (
+                  <li key={i}>{b}</li>
+                ))}
+              </ul>
+            )}
           </li>
         ))}
       </ol>

@@ -77,29 +77,25 @@ export const site = {
       short: "Stanford GSB", // fits the corkboard card
       dates: "2025 – Present",
       location: "Stanford, CA",
-      bullets: ["MBA candidate, Class of 2027."],
     },
     {
       role: "Applied AI Product Manager Intern",
       company: "Google Cloud",
       dates: "Jun – Sep 2026",
-      bullets: ["Summer product management internship on applied AI in Google Cloud."],
     },
     {
       role: "Software Engineer",
       company: "Amazon",
       dates: "2021 – 2025",
       location: "Seattle, WA",
-      bullets: ["Software engineer focused on AI and data."],
     },
     {
       role: "Bachelor's, EECS + Business (M.E.T.)",
       company: "UC Berkeley",
       dates: "2017 – 2021",
       location: "Berkeley, CA",
-      bullets: ["Bachelor's degree through the Management, Entrepreneurship & Technology (M.E.T.) program: electrical engineering & computer sciences plus business."],
     },
-  ] as { role: string; company: string; short?: string; dates?: string; location?: string; bullets: string[] }[],
+  ] as { role: string; company: string; short?: string; dates?: string; location?: string; bullets?: string[] }[],
 
   skills: [
     {
