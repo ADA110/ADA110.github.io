@@ -20,7 +20,8 @@ export function Labels() {
   const hovered = useStore((s) => s.hovered);
   const section = useStore((s) => s.section);
   const lampOn = useStore((s) => s.lampOn);
-  const showAll = useStore((s) => (s.labelHint || (s.touch && s.introDone)) && !s.section);
+  // Every tag shows briefly after the intro (on phones too), then only on hover, so the desk stays easy to tap.
+  const showAll = useStore((s) => s.labelHint && !s.section);
   const ids = [...SECTIONS.map((s) => s.id), "lamp"] as const;
 
   return (
