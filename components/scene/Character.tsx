@@ -63,10 +63,11 @@ function armPose(action: Action, i: number, s: number, u: number, headPos: THREE
   o.via = null;
   switch (action) {
     case "stretch": {
-      // Hands up together over his head (shoulders shrugged, elbows bowed out so the arms pass outside
-      // the headphones), palms toward each other, with a little reach-and-sway.
-      head.localToWorld(o.wrist.set(s * (0.075 + Math.sin(u * 2.5) * 0.006), 0.36 + Math.sin(u * 2.5 + s) * 0.01, 0.0));
-      o.pole.set(s, -0.15, 0.1).normalize();
+      // Hands up together, palms touching, just above and in front of his head; elbows bend forward and
+      // a little out, so the arms rise in front of the headphones instead of through them (checked with
+      // a clearance probe: 5 cm or more all the way up and down).
+      head.localToWorld(o.wrist.set(s * (0.05 + Math.sin(u * 2.5) * 0.006), 0.28 + Math.sin(u * 2.5 + s) * 0.01, -0.2));
+      o.pole.set(s * 0.6, -0.2, -1).normalize();
       o.dir.set(-s * 0.2, 1, 0).normalize().transformDirection(head.matrixWorld);
       o.palm.set(-s, 0, 0).transformDirection(head.matrixWorld);
       o.curl = [0.06, 0.05, 0.04];
@@ -76,8 +77,8 @@ function armPose(action: Action, i: number, s: number, u: number, headPos: THREE
       // Hands cupping the back of his head, outside the hood (its back is ~0.14 behind the head bone at
       // this height): palms toward the head, fingers curving round to meet in the middle, elbows out.
       head.localToWorld(o.wrist.set(s * 0.115, 0.125, 0.172));
-      // swing up and out past the headphones, then in behind the head
-      o.via = head.localToWorld(o.viaPoint.set(s * 0.34, 0.08, 0.07));
+      // swing wide and a little back past the headphones, then in behind the head
+      o.via = head.localToWorld(o.viaPoint.set(s * 0.45, 0.05, 0.12));
       o.pole.set(s, 0.35, -0.25).normalize();
       o.dir.set(-s, 0.12, 0.28).normalize().transformDirection(head.matrixWorld);
       o.palm.set(s * 0.15, 0.05, -1).normalize().transformDirection(head.matrixWorld);
@@ -798,7 +799,7 @@ export function Character() {
       const s = i === 0 ? -1 : 1;
       const [la, lb] = r.lengths[i];
       // a shrug for the big stretch: lifts the arm's root up and out, clear of the headphone cups
-      if (action === "stretch") a.shoulder.rotation.z = s * 0.38 * k;
+      if (action === "stretch") a.shoulder.rotation.z = s * 0.4 * k;
       // Typing target: a wandering hand with quick strikes (hands just rest on the keys between actions).
       const keys = action === "type" ? 1 : 0;
       const strike = Math.max(0, Math.sin(t * 9 + i * 2.1 + Math.sin(t * 2.7 + i) * 2)) * keys;
