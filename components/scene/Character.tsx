@@ -170,20 +170,27 @@ function neutral(map: THREE.Texture) {
 }
 
 /**
- * Tailors the hoodie: folds the model's lowered hood down into a ring at the base of the neck (hidden
- * under the raised hood, so nothing pokes through it) and takes in the baggy body and sleeves a little.
- * Works in bind-pose model space through the mesh's bind matrices.
+ * Tailors the hoodie: removes the model's lowered hood (its own block of the texture: the middle columns
+ * of the upper half) so only the raised hood shows, and takes in the baggy body and sleeves a little.
+ * Positions are adjusted in bind-pose model space through the mesh's bind matrices.
  */
 function tailor(mesh: THREE.SkinnedMesh) {
-  const pos = mesh.geometry.attributes.position as THREE.BufferAttribute;
+  const g = mesh.geometry;
+  const uv = g.attributes.uv as THREE.BufferAttribute;
+  const idx = g.index!.array;
+  const keep: number[] = [];
+  for (let t = 0; t < idx.length; t += 3) {
+    const u = (uv.getX(idx[t]) + uv.getX(idx[t + 1]) + uv.getX(idx[t + 2])) / 3;
+    const v = (uv.getY(idx[t]) + uv.getY(idx[t + 1]) + uv.getY(idx[t + 2])) / 3;
+    if (!(u > 0.3 && u < 0.7 && v < 0.5)) keep.push(idx[t], idx[t + 1], idx[t + 2]);
+  }
+  g.setIndex(keep);
+
+  const pos = g.attributes.position as THREE.BufferAttribute;
   const p = new THREE.Vector3();
   for (let i = 0; i < pos.count; i++) {
     p.fromBufferAttribute(pos, i).applyMatrix4(mesh.bindMatrix);
-    if (p.y > 1.47 || (p.y > 1.3 && p.z > 0.075 && Math.abs(p.x) < 0.16)) {
-      // the lowered hood: onto a small ring around the neck
-      const a = Math.atan2(p.x, p.z - 0.004);
-      p.set(Math.sin(a) * 0.07, THREE.MathUtils.clamp(p.y, 1.41, 1.47), 0.004 + Math.cos(a) * 0.07);
-    } else if (p.y > 0.9 && Math.abs(p.x) < 0.22) {
+    if (p.y > 0.9 && p.y < 1.47 && Math.abs(p.x) < 0.22) {
       // body: a slimmer fit around the spine
       p.x *= 0.93;
       p.z = -0.01 + (p.z + 0.01) * 0.9;
@@ -245,10 +252,10 @@ const smooth = (x: number, a: number, b: number) => {
 };
 
 /**
- * The hood, worn up: a snug shell just off the head that frames the face and tucks into the hoodie at the
- * base of the neck. Built in the model's rest pose and skinned to the same skeleton: the top follows the
- * head, the bottom stays with the chest, blending through the neck. (The model's own hood is down; this
- * covers it.) Returns the outside and a darker inside.
+ * The hood, worn up: a snug shell just off the head that frames the face and drapes onto the shoulders
+ * and upper back. Built in the model's rest pose and skinned to the same skeleton: the top follows the
+ * head, the bottom stays with the chest, blending through the neck. (The model's own lowered hood is
+ * removed in `tailor`.) Returns the outside and a darker inside.
  */
 function makeHood(head: THREE.Bone, chest: THREE.Bone) {
   // Its own two-bone skeleton, bound at the rest pose in model space (the file's bind data is in
@@ -263,9 +270,10 @@ function makeHood(head: THREE.Bone, chest: THREE.Bone) {
       [0.131, 1.65],
       [0.127, 1.575],
       [0.106, 1.51],
-      [0.094, 1.47],
-      [0.095, 1.43],
-      [0.097, 1.38],
+      [0.096, 1.47],
+      [0.11, 1.43],
+      [0.135, 1.397],
+      [0.158, 1.372],
     ].map(([r, y]) => new THREE.Vector2(r, y)),
   );
   const rows = 34;
@@ -289,7 +297,7 @@ function makeHood(head: THREE.Bone, chest: THREE.Bone) {
       const th = raw < open ? open : raw > Math.PI * 2 - open ? Math.PI * 2 - open : raw;
       const back = Math.max(0, -Math.cos(th)); // 1 directly behind
       const r = pt.x;
-      pos.push(Math.sin(th) * r * 0.95, y, -Math.cos(th) * r + 0.006 + 0.006 * back * lower);
+      pos.push(Math.sin(th) * r * 0.95, y, -Math.cos(th) * r + 0.006 + 0.016 * back * lower);
       const w = smooth(y, 1.45, 1.57); // 1 → head, 0 → chest
       skinIndex.push(hi, ci, 0, 0);
       skinWeight.push(w, 1 - w, 0, 0);
@@ -314,7 +322,8 @@ function makeHood(head: THREE.Bone, chest: THREE.Bone) {
     m.bind(skeleton, new THREE.Matrix4());
     return m;
   };
-  return [make(HOODIE, THREE.FrontSide), make(HOODIE_INSIDE, THREE.BackSide)];
+  // a touch darker than the dye colour: the body's fabric texture shades it about this much
+  return [make(HOODIE.clone().multiplyScalar(0.8), THREE.FrontSide), make(HOODIE_INSIDE, THREE.BackSide)];
 }
 
 /** A few dark curls slipping out under the front of the hood, in head-bone space (face toward -z). */
