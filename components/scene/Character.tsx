@@ -153,6 +153,51 @@ function bearded(map: THREE.Texture) {
   return tex;
 }
 
+/** The hoodie texture is tinted lavender; strip the tint (keeping its fold shading) so it dyes to the same red as the hood. */
+function neutral(map: THREE.Texture) {
+  const img = map.image as CanvasImageSource & { width: number; height: number };
+  const c = document.createElement("canvas");
+  c.width = img.width;
+  c.height = img.height;
+  const ctx = c.getContext("2d")!;
+  ctx.filter = "grayscale(1) brightness(1.08)";
+  ctx.drawImage(img, 0, 0);
+  const tex = new THREE.CanvasTexture(c);
+  tex.flipY = map.flipY;
+  tex.colorSpace = map.colorSpace;
+  tex.channel = map.channel;
+  return tex;
+}
+
+/**
+ * Tailors the hoodie: folds the model's lowered hood down into a ring at the base of the neck (hidden
+ * under the raised hood, so nothing pokes through it) and takes in the baggy body and sleeves a little.
+ * Works in bind-pose model space through the mesh's bind matrices.
+ */
+function tailor(mesh: THREE.SkinnedMesh) {
+  const pos = mesh.geometry.attributes.position as THREE.BufferAttribute;
+  const p = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    p.fromBufferAttribute(pos, i).applyMatrix4(mesh.bindMatrix);
+    if (p.y > 1.47 || (p.y > 1.3 && p.z > 0.075 && Math.abs(p.x) < 0.16)) {
+      // the lowered hood: onto a small ring around the neck
+      const a = Math.atan2(p.x, p.z - 0.004);
+      p.set(Math.sin(a) * 0.07, THREE.MathUtils.clamp(p.y, 1.41, 1.47), 0.004 + Math.cos(a) * 0.07);
+    } else if (p.y > 0.9 && Math.abs(p.x) < 0.22) {
+      // body: a slimmer fit around the spine
+      p.x *= 0.93;
+      p.z = -0.01 + (p.z + 0.01) * 0.9;
+    } else if (Math.abs(p.x) >= 0.22 && p.y > 1.2) {
+      // sleeves (arms out along x in the rest pose): closer around each arm
+      p.y = 1.4 + (p.y - 1.4) * 0.88;
+      p.z = -0.01 + (p.z + 0.01) * 0.88;
+    }
+    p.applyMatrix4(mesh.bindMatrixInverse);
+    pos.setXYZ(i, p.x, p.y, p.z);
+  }
+  pos.needsUpdate = true;
+}
+
 /** Unlit VRoid materials → lit standard materials (the site turns them into toon), recoloured. */
 function restyle(root: THREE.Object3D) {
   root.traverse((o) => {
@@ -178,11 +223,18 @@ function restyle(root: THREE.Object3D) {
       if (/_SKIN/.test(n)) out.color.copy(SKIN);
       if (/Face_00_SKIN/.test(n) && src.map) out.map = bearded(src.map);
       if (/HAIR|FaceBrow/.test(n)) out.color.copy(HAIR);
-      if (/Tops/.test(n)) out.color.copy(HOODIE);
+      if (/Tops/.test(n)) {
+        out.color.copy(HOODIE);
+        if (src.map) out.map = neutral(src.map);
+      }
       if (/Bottoms/.test(n)) out.color.copy(PANTS);
       return out;
     };
     mesh.material = Array.isArray(mesh.material) ? mesh.material.map(swap) : swap(mesh.material);
+    if (/Tops/.test((mesh.material as THREE.Material).name) && mesh.isSkinnedMesh) {
+      mesh.geometry = mesh.geometry.clone(); // the loaded geometry is shared with the cached model
+      tailor(mesh);
+    }
   });
 }
 
@@ -193,8 +245,8 @@ const smooth = (x: number, a: number, b: number) => {
 };
 
 /**
- * The hood, worn up: a roomy shell over the head that frames the face and falls to the shoulders, where it
- * meets the hoodie. Built in the model's rest pose and skinned to the same skeleton: the top follows the
+ * The hood, worn up: a snug shell just off the head that frames the face and tucks into the hoodie at the
+ * base of the neck. Built in the model's rest pose and skinned to the same skeleton: the top follows the
  * head, the bottom stays with the chest, blending through the neck. (The model's own hood is down; this
  * covers it.) Returns the outside and a darker inside.
  */
@@ -205,15 +257,15 @@ function makeHood(head: THREE.Bone, chest: THREE.Bone) {
   // meridian profile (distance from the head's vertical axis, height), crown to shoulders
   const profile = new THREE.SplineCurve(
     [
-      [0.0, 1.812],
-      [0.09, 1.79],
-      [0.145, 1.73],
-      [0.162, 1.645],
-      [0.153, 1.56],
-      [0.13, 1.495],
-      [0.128, 1.455],
-      [0.155, 1.405],
-      [0.185, 1.37],
+      [0.0, 1.776],
+      [0.072, 1.764],
+      [0.116, 1.722],
+      [0.131, 1.65],
+      [0.127, 1.575],
+      [0.106, 1.51],
+      [0.094, 1.47],
+      [0.095, 1.43],
+      [0.097, 1.38],
     ].map(([r, y]) => new THREE.Vector2(r, y)),
   );
   const rows = 34;
@@ -231,10 +283,13 @@ function makeHood(head: THREE.Bone, chest: THREE.Bone) {
     const open = 0.82 * smooth(y, 1.738, 1.675) * (1 - 0.78 * smooth(y, 1.52, 1.46));
     const lower = smooth(y, 1.6, 1.42); // drapes back and wider toward the shoulders
     for (let i = 0; i <= cols; i++) {
-      const th = open + (i / cols) * (Math.PI * 2 - 2 * open); // 0 = straight ahead
+      // Columns sit at fixed angles all the way round (so the back is one smooth surface); inside the face
+      // opening they're pulled to its edge, leaving the front open without bunching the mesh elsewhere.
+      const raw = (i / cols) * Math.PI * 2; // 0 = straight ahead
+      const th = raw < open ? open : raw > Math.PI * 2 - open ? Math.PI * 2 - open : raw;
       const back = Math.max(0, -Math.cos(th)); // 1 directly behind
-      const r = pt.x * (1 + 0.07 * back * lower);
-      pos.push(Math.sin(th) * r * 0.93, y - 0.012 * back * lower, -Math.cos(th) * r + 0.014 + 0.02 * back * lower);
+      const r = pt.x;
+      pos.push(Math.sin(th) * r * 0.95, y, -Math.cos(th) * r + 0.006 + 0.006 * back * lower);
       const w = smooth(y, 1.45, 1.57); // 1 → head, 0 → chest
       skinIndex.push(hi, ci, 0, 0);
       skinWeight.push(w, 1 - w, 0, 0);
@@ -244,7 +299,7 @@ function makeHood(head: THREE.Bone, chest: THREE.Bone) {
     for (let i = 0; i < cols; i++) {
       const a = k * (cols + 1) + i;
       const b = a + cols + 1;
-      index.push(a, b, a + 1, b, b + 1, a + 1);
+      index.push(a, a + 1, b, a + 1, b + 1, b); // outward-facing, so the outline pass sees the hood
     }
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
