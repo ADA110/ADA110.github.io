@@ -23,8 +23,68 @@ const ROOT = new THREE.Vector3(-0.03, 0, 0.5);
 const STANDING_HIPS = 1.008;
 const SEAT_HIPS = 0.52;
 
-const TYPE_TIME = 7;
-const SIP_TIME = 4;
+/** Things he does between bursts of typing, how long each takes, and how often (sips are the favourite). */
+type Action = "type" | "sip" | "stretch" | "leanBack" | "think" | "window" | "neck";
+const DURATION: Record<Exclude<Action, "type">, number> = { sip: 4, stretch: 4.4, leanBack: 5, think: 5, window: 4, neck: 3.2 };
+const WEIGHTS: [Exclude<Action, "type">, number][] = [
+  ["sip", 3],
+  ["stretch", 1],
+  ["leanBack", 1],
+  ["think", 1.2],
+  ["window", 1.4],
+  ["neck", 0.8],
+];
+let lastAction: Action = "type";
+function pickAction(): Action {
+  const options = WEIGHTS.filter(([a]) => a !== lastAction); // never the same thing twice in a row
+  let roll = Math.random() * options.reduce((n, [, w]) => n + w, 0);
+  for (const [a, w] of options) if ((roll -= w) <= 0) return (lastAction = a);
+  return (lastAction = "sip");
+}
+
+const poseOut = {
+  wrist: new THREE.Vector3(),
+  pole: new THREE.Vector3(),
+  dir: new THREE.Vector3(),
+  palm: new THREE.Vector3(),
+  curl: [0, 0, 0],
+};
+
+/**
+ * Where one hand goes for a non-typing action (world space), or null if it stays on the keys.
+ * `s` is -1 for the left hand, +1 for the right.
+ */
+function armPose(action: Action, i: number, s: number, u: number, headPos: THREE.Vector3, head: THREE.Object3D) {
+  const o = poseOut;
+  switch (action) {
+    case "stretch": // both arms up overhead, fingers open, a little reach-and-sway
+      o.wrist.set(headPos.x + s * (0.11 + Math.sin(u * 2.5) * 0.01), headPos.y + 0.36 + Math.sin(u * 2.5 + s) * 0.015, headPos.z + 0.02);
+      o.pole.set(s, 0.25, 0.35).normalize();
+      o.dir.set(-s * 0.15, 1, -0.05).normalize();
+      o.palm.set(-s * 0.4, 0, -1).normalize();
+      o.curl = [0.06, 0.05, 0.04];
+      return o;
+    case "leanBack": // hands laced behind his head, elbows out
+      o.wrist.set(headPos.x + s * 0.075, headPos.y + 0.035, headPos.z + 0.085);
+      o.pole.set(s, 0.35, -0.25).normalize();
+      o.dir.set(-s, 0.15, 0.35).normalize();
+      o.palm.set(0, 0.1, -1).normalize();
+      o.curl = [0.55, 0.6, 0.35];
+      return o;
+    case "think": {
+      // right fist under his chin, elbow down toward the desk; the left hand rests on the keys
+      if (i === 0) return null;
+      head.localToWorld(o.wrist.set(0.02, -0.15, -0.035));
+      o.pole.set(0.35, -1, 0.15).normalize();
+      o.dir.set(-0.15, 0.85, -0.5).normalize();
+      o.palm.set(-1, 0, 0.2).normalize();
+      o.curl = [1.25, 1.35, 0.95];
+      return o;
+    }
+    default:
+      return null;
+  }
+}
 
 const SKIN = new THREE.Color("#c4906f");
 const HAIR = new THREE.Color("#1b1513");
@@ -547,6 +607,8 @@ export function Character() {
       handleSide: new THREE.Vector3(),
       mugUp: new THREE.Vector3(),
       palm: new THREE.Vector3(),
+      headPos: new THREE.Vector3(),
+      pole: new THREE.Vector3(),
     }),
     [],
   );
@@ -559,29 +621,71 @@ export function Character() {
     [],
   );
 
+  // What he's doing right now; typing in between every other action.
+  const plan = useRef({ action: "type" as Action, start: -1.5, dur: 6 });
+
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     const section = useStore.getState().section;
     if (body.current) body.current.visible = !(section === "projects" || section === "about" || section === "contact" || section === "notes");
     const r = rig;
-    const { mugPos, grip, handleDir, handleSide, mugUp, mouth, elbow, wrist, shoulder, dir, fore, palm } = tmp;
+    const { mugPos, grip, handleDir, handleSide, mugUp, mouth, elbow, wrist, shoulder, dir, fore, palm, headPos, pole } = tmp;
     r.rest.forEach((q, o) => o.quaternion.copy(q));
 
-    // The type → sip loop.
-    const cycle = (t + 2) % (TYPE_TIME + SIP_TIME);
-    const u = cycle - TYPE_TIME; // < 0 while typing
+    // Pick the next thing to do when the current one ends.
+    const P = plan.current;
+    if (t - P.start > P.dur) {
+      const next: Action = P.action === "type" ? pickAction() : "type";
+      plan.current = { action: next, start: t, dur: next === "type" ? 5 + Math.random() * 4 : DURATION[next] };
+    }
+    const { action, start, dur } = plan.current;
+    const u = t - start; // seconds into the current action
     typing.present = true;
-    typing.active = u < 0; // the monitor fills in only while his hands are on the keys
-    const reach = u < 0 ? 0 : ease(u / 0.8) - ease((u - 3.1) / 0.8);
-    const lift = u < 0 ? 0 : ease((u - 0.8) / 0.8) - ease((u - 2.4) / 0.7);
-    const tilt = lift * (0.6 + 0.4 * ease((u - 1.5) / 0.5) - 0.4 * ease((u - 2.1) / 0.4));
+    typing.active = action === "type"; // the monitor fills in only while his hands are on the keys
+    // how far into a non-typing pose he is (eases in and back out)
+    const k = action === "type" || action === "sip" ? 0 : ease(u / 0.9) - ease((u - (dur - 0.9)) / 0.9);
+
+    // Sipping: reach for the mug, lift it to his lips, tip it, put it back.
+    const su = action === "sip" ? u : -1;
+    const reach = su < 0 ? 0 : ease(su / 0.8) - ease((su - 3.1) / 0.8);
+    const lift = su < 0 ? 0 : ease((su - 0.8) / 0.8) - ease((su - 2.4) / 0.7);
+    const tilt = lift * (0.6 + 0.4 * ease((su - 1.5) / 0.5) - 0.4 * ease((su - 2.1) / 0.4));
+
+    // Whole-body pose for the action: spine lean (back is +), head pitch/yaw/roll.
+    let spineX = 0;
+    let spineY = 0;
+    let headX = 0;
+    let headY = 0;
+    let headZ = 0;
+    if (action === "stretch") {
+      spineX = 0.2;
+      headX = 0.32 + Math.sin(u * 2.5) * 0.03;
+    } else if (action === "leanBack") {
+      spineX = 0.26;
+      headX = 0.12;
+    } else if (action === "think") {
+      spineX = -0.05;
+      headX = 0.06;
+      headZ = -0.1;
+    } else if (action === "window") {
+      spineY = 0.16;
+      headY = 0.78;
+      headX = 0.06;
+    } else if (action === "neck") {
+      headZ = Math.sin(u * 2.2) * 0.32;
+      headX = 0.1 * Math.cos(u * 2.2);
+    }
 
     // Seated torso: a slight forward lean, breathing, head toward the screen (tipping back to sip).
     const breath = Math.sin(t * 1.6);
-    r.spine.rotation.x = -0.1 + breath * 0.01;
-    r.chest.rotation.x = -0.06 + breath * 0.008;
+    r.spine.rotation.set(-0.1 + breath * 0.01 + spineX * k, spineY * k, 0);
+    r.chest.rotation.x = -0.06 + breath * 0.008 + spineX * 0.4 * k;
     r.neck.rotation.x = 0.05;
-    r.head.rotation.set(-0.1 + Math.sin(t * 1.1) * 0.015 + lift * 0.42, Math.sin(t * 0.37) * 0.05 - lift * 0.1, 0);
+    r.head.rotation.set(
+      -0.1 + Math.sin(t * 1.1) * 0.015 + lift * 0.42 + headX * k,
+      Math.sin(t * 0.37) * 0.05 * (1 - k) - lift * 0.1 + headY * k,
+      headZ * k,
+    );
 
     // Legs: thighs forward along the seat, shins down, feet flat on the floor.
     r.arms.forEach((a, i) => {
@@ -593,6 +697,7 @@ export function Character() {
 
     // Mug follows the right hand while it's held.
     r.head.updateWorldMatrix(true, false);
+    r.head.getWorldPosition(headPos);
     r.head.localToWorld(mouth.set(0, 0.0, -0.1));
     v1.set(0, MUG_LIP * Math.cos(tilt), MUG_LIP * Math.sin(tilt));
     v2.copy(mouth).sub(v1).add(v3.set(0.012, 0, -0.035));
@@ -609,10 +714,12 @@ export function Character() {
     mugUp.copy(UP).applyEuler(euler);
 
     r.arms.forEach((a, i) => {
+      const s = i === 0 ? -1 : 1;
       const [la, lb] = r.lengths[i];
-      // Typing target: a wandering hand with quick strikes.
-      const strike = Math.max(0, Math.sin(t * 9 + i * 2.1 + Math.sin(t * 2.7 + i) * 2));
-      wrist.copy(KEYS[i]).add(v1.set(Math.sin(t * 0.9 + i * 2) * 0.016, 0.008 - strike ** 4 * 0.008, Math.sin(t * 1.3 + i) * 0.008));
+      // Typing target: a wandering hand with quick strikes (hands just rest on the keys between actions).
+      const keys = action === "type" ? 1 : 0;
+      const strike = Math.max(0, Math.sin(t * 9 + i * 2.1 + Math.sin(t * 2.7 + i) * 2)) * keys;
+      wrist.copy(KEYS[i]).add(v1.set(Math.sin(t * 0.9 + i * 2) * 0.016 * keys, 0.008 - strike ** 4 * 0.008, Math.sin(t * 1.3 + i) * 0.008 * keys));
       // Holding the mug: a fist around the handle's outer bar, knuckles just past it, wrist out along the
       // handle, fingers wrapping through the loop and the thumb resting on top. The hand lifts in an arc.
       const hold = i === 1 ? reach : 0;
@@ -622,9 +729,18 @@ export function Character() {
         if (hold < 1) wrist.y += Math.sin(Math.PI * hold) * 0.035;
       }
 
+      // Arm poses for the other actions (null: this hand stays on the keyboard).
+      const pose = armPose(action, i, s, u, headPos, r.head);
+      const w = pose ? k : 0;
+      pole.copy(POLE[i]);
+      if (pose) {
+        wrist.lerp(pose.wrist, w);
+        pole.lerp(pose.pole, w).normalize();
+      }
+
       a.upper.updateWorldMatrix(true, false);
       a.upper.getWorldPosition(shoulder);
-      solveElbow(shoulder, wrist, la, lb, POLE[i], elbow);
+      solveElbow(shoulder, wrist, la, lb, pole, elbow);
       aim(a.upper, a.lower, dir.subVectors(elbow, shoulder));
       aim(a.lower, a.hand, dir.subVectors(wrist, elbow));
       fore.subVectors(wrist, elbow).normalize();
@@ -635,24 +751,32 @@ export function Character() {
       // Palm: down on the keys; holding the mug it turns on its side (thumb up), facing the handle.
       palm.set(i === 0 ? 0.15 : -0.15, -1, 0).normalize();
       if (hold > 0) palm.lerp(v2.crossVectors(mugUp, dir).normalize(), hold).normalize();
+      if (pose) {
+        dir.lerp(pose.dir, w).normalize();
+        palm.lerp(pose.palm, w).normalize();
+      }
       // The forearm carries most of the roll, then the wrist finishes it.
       rollTo(a.lower, fore, PALM_LOCAL, palm);
       aim(a.hand, a.middle1, dir);
       rollTo(a.hand, dir, PALM_LOCAL, palm);
 
-      // Fingers: relaxed curl with individual key taps; a full curl around the handle.
+      // Fingers: relaxed curl with individual key taps; a full curl around the handle; posed otherwise.
       const sign = i === 0 ? 1 : -1; // curl toward the palm about each finger's local z
       a.fingers.forEach((chain, f) => {
         // a keystroke is a quick dip of the whole finger, never a flick upward
-        const tap = Math.max(0, Math.sin(t * (7 + f * 1.3) + f * 1.9 + i * 0.8)) ** 12;
+        const tap = Math.max(0, Math.sin(t * (7 + f * 1.3) + f * 1.9 + i * 0.8)) ** 12 * keys;
         const relaxed = [0.28 + f * 0.04 + tap * 0.18, 0.3 + f * 0.03, 0.14];
         const held = [1.4, 1.5, 1.0];
-        chain.forEach((b, k) => b.rotateZ(sign * THREE.MathUtils.lerp(relaxed[k], held[k], hold)));
+        chain.forEach((b, j) => {
+          let c = THREE.MathUtils.lerp(relaxed[j], held[j], hold);
+          if (pose) c = THREE.MathUtils.lerp(c, pose.curl[j], w);
+          b.rotateZ(sign * c);
+        });
       });
       // Thumb: tucked in beside the index finger (resting over the handle when holding), lightly bent.
-      a.thumb.forEach((b, k) => {
-        if (k === 0) b.rotateY(sign * (0.5 + hold * 0.35));
-        b.rotateZ(sign * (k === 0 ? 0.2 + hold * 0.1 : 0.18 + hold * 0.15));
+      a.thumb.forEach((b, j) => {
+        if (j === 0) b.rotateY(sign * (0.5 + hold * 0.35));
+        b.rotateZ(sign * (j === 0 ? 0.2 + hold * 0.1 : 0.18 + hold * 0.15));
       });
     });
   });
