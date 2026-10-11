@@ -44,6 +44,9 @@ function pickAction(): Action {
 
 const poseOut = {
   wrist: new THREE.Vector3(),
+  /** Optional waypoint the hand curves through on its way in and out (around the head, not through it). */
+  via: null as THREE.Vector3 | null,
+  viaPoint: new THREE.Vector3(),
   pole: new THREE.Vector3(),
   dir: new THREE.Vector3(),
   palm: new THREE.Vector3(),
@@ -56,6 +59,7 @@ const poseOut = {
  */
 function armPose(action: Action, i: number, s: number, u: number, headPos: THREE.Vector3, head: THREE.Object3D) {
   const o = poseOut;
+  o.via = null;
   switch (action) {
     case "stretch": // both arms up overhead, fingers open, a little reach-and-sway
       o.wrist.set(headPos.x + s * (0.11 + Math.sin(u * 2.5) * 0.01), headPos.y + 0.36 + Math.sin(u * 2.5 + s) * 0.015, headPos.z + 0.02);
@@ -68,6 +72,8 @@ function armPose(action: Action, i: number, s: number, u: number, headPos: THREE
       // Hands cupping the back of his head, outside the hood (its back is ~0.14 behind the head bone at
       // this height): palms toward the head, fingers curving round to meet in the middle, elbows out.
       head.localToWorld(o.wrist.set(s * 0.115, 0.125, 0.172));
+      // swing up and out past the headphones, then in behind the head
+      o.via = head.localToWorld(o.viaPoint.set(s * 0.34, 0.08, 0.07));
       o.pole.set(s, 0.35, -0.25).normalize();
       o.dir.set(-s, 0.12, 0.28).normalize().transformDirection(head.matrixWorld);
       o.palm.set(s * 0.15, 0.05, -1).normalize().transformDirection(head.matrixWorld);
@@ -217,15 +223,21 @@ function bearded(map: THREE.Texture) {
   return tex;
 }
 
-/** The hoodie texture is tinted lavender; strip the tint (keeping its fold shading) so it dyes to the same red as the hood. */
-function neutral(map: THREE.Texture) {
+/**
+ * The hoodie's fabric: its texture's fold shading (minus a lavender tint) dyed red.
+ */
+function hoodieFabric(map: THREE.Texture) {
   const img = map.image as CanvasImageSource & { width: number; height: number };
   const c = document.createElement("canvas");
-  c.width = img.width;
-  c.height = img.height;
+  const W = (c.width = img.width);
+  const H = (c.height = img.height);
   const ctx = c.getContext("2d")!;
   ctx.filter = "grayscale(1) brightness(1.08)";
   ctx.drawImage(img, 0, 0);
+  ctx.filter = "none";
+  ctx.globalCompositeOperation = "multiply";
+  ctx.fillStyle = `#${HOODIE.getHexString()}`;
+  ctx.fillRect(0, 0, W, H);
   const tex = new THREE.CanvasTexture(c);
   tex.flipY = map.flipY;
   tex.colorSpace = map.colorSpace;
@@ -318,8 +330,8 @@ function restyle(root: THREE.Object3D) {
       if (/Face_00_SKIN/.test(n) && src.map) out.map = bearded(src.map);
       if (/HAIR|FaceBrow/.test(n)) out.color.copy(HAIR);
       if (/Tops/.test(n)) {
-        out.color.copy(HOODIE);
-        if (src.map) out.map = neutral(src.map);
+        out.color.set("#ffffff"); // the red is baked into the texture
+        if (src.map) out.map = hoodieFabric(src.map);
       }
       if (/Bottoms/.test(n)) out.color.copy(PANTS);
       return out;
@@ -689,7 +701,7 @@ export function Character() {
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     const section = useStore.getState().section;
-    if (body.current) body.current.visible = !(section === "projects" || section === "about" || section === "contact" || section === "notes");
+    if (body.current) body.current.visible = !(section === "projects" || section === "about" || section === "notes");
     const r = rig;
     const { mugPos, grip, handleDir, handleSide, mugUp, mouth, elbow, wrist, shoulder, dir, fore, palm, headPos, pole } = tmp;
     r.rest.forEach((q, o) => o.quaternion.copy(q));
@@ -796,7 +808,12 @@ export function Character() {
       const w = pose ? k : 0;
       pole.copy(POLE[i]);
       if (pose) {
-        wrist.lerp(pose.wrist, w);
+        if (pose.via) {
+          // quadratic curve: keyboard → beside the head → behind it (and back the same way)
+          const a0 = (1 - w) * (1 - w);
+          const a1 = 2 * (1 - w) * w;
+          wrist.multiplyScalar(a0).addScaledVector(pose.via, a1).addScaledVector(pose.wrist, w * w);
+        } else wrist.lerp(pose.wrist, w);
         pole.lerp(pose.pole, w).normalize();
       }
 

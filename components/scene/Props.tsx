@@ -156,8 +156,8 @@ function Phone() {
     if (Math.floor(s.clock.elapsedTime) % 20 === 0 && s.clock.elapsedTime % 1 < dt) screen.redraw();
   });
   return (
-    <Hotspot id="contact" labelPosition={[-0.4, T + 0.08, 0.15]}>
-      <group position={[-0.4, T, 0.16]} rotation={[0, 0.38, 0]}>
+    <Hotspot id="contact" labelPosition={[0.72, T + 0.08, 0.03]}>
+      <group position={[0.72, T, 0.03]} rotation={[0, -0.32, 0]}>
         <RoundedBox args={[0.0715, 0.0078, 0.147]} radius={0.0035} smoothness={4} position={[0, 0.0039, 0]} castShadow receiveShadow>
           <meshStandardMaterial color="#3a3c40" roughness={0.3} metalness={0.9} />
         </RoundedBox>

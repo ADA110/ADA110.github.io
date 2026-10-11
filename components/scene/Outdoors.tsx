@@ -308,6 +308,67 @@ function SeattlePrint() {
   return <primitive object={frame} position={[0.64, 1.6, WALL + 0.001]} scale={0.62} />;
 }
 
+// ---------------- Cal + Stanford: a small framed print under the Seattle one ----------------
+
+/** Two school panels side by side, drawn in school colours (not the official marks). */
+function SchoolsPrint() {
+  const art = useMemo(
+    () =>
+      paintedTexture(640, 300, (ctx, w, h) => {
+        const serif = cssVar("--font-serif", "serif");
+        const hand = cssVar("--font-hand", "cursive");
+        ctx.fillStyle = "#efe7d6"; // mat
+        ctx.fillRect(0, 0, w, h);
+        const pw = (w - 3 * 22) / 2;
+        const ph = h - 44;
+        // Cal: gold script on Berkeley blue
+        ctx.fillStyle = "#0f2f57";
+        ctx.fillRect(22, 22, pw, ph);
+        ctx.fillStyle = "#f2b632";
+        ctx.textAlign = "center";
+        ctx.font = `700 132px ${hand}`;
+        ctx.fillText("Cal", 22 + pw / 2, 22 + ph * 0.62);
+        ctx.font = `600 22px ${serif}`;
+        ctx.fillText("B E R K E L E Y", 22 + pw / 2, 22 + ph * 0.86);
+        // Stanford: a little redwood over the name, white on cardinal
+        const x0 = 44 + pw;
+        ctx.fillStyle = "#8c1d1d";
+        ctx.fillRect(x0, 22, pw, ph);
+        const cx = x0 + pw / 2;
+        ctx.fillStyle = "#2f6b3f";
+        for (let k = 0; k < 4; k++) {
+          const top = 40 + k * 22;
+          const half = 22 + k * 11;
+          ctx.beginPath();
+          ctx.moveTo(cx, top);
+          ctx.lineTo(cx + half, top + 46);
+          ctx.lineTo(cx - half, top + 46);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.fillStyle = "#5a3a22";
+        ctx.fillRect(cx - 5, 150, 10, 16);
+        ctx.fillStyle = "#fbf7ef";
+        ctx.font = `400 58px ${serif}`;
+        ctx.fillText("Stanford", cx, 22 + ph * 0.86);
+      }),
+    [],
+  );
+  const W = 0.34;
+  const H = (W * 300) / 640;
+  return (
+    <group position={[0.64, 1.24, WALL + 0.012]}>
+      <RoundedBox args={[W + 0.03, H + 0.03, 0.02]} radius={0.004} castShadow receiveShadow>
+        <meshStandardMaterial color="#3b2a1d" roughness={0.6} />
+      </RoundedBox>
+      <mesh position={[0, 0, 0.0105]}>
+        <planeGeometry args={[W, H]} />
+        <meshStandardMaterial map={art.tex} roughness={0.85} />
+      </mesh>
+    </group>
+  );
+}
+
 // ---------------- brass hurricane lantern on the windowsill (glows when the lamp is off) ----------------
 
 function Lantern() {
@@ -346,6 +407,7 @@ export function Outdoors() {
         <Boot position={[-0.99, 0, -0.1]} rotation={Math.PI - 0.12} />
         <SeattlePrint />
       </Hotspot>
+      <SchoolsPrint />
       <Lantern />
     </>
   );

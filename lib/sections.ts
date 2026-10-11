@@ -66,7 +66,7 @@ export const SECTIONS: Section[] = [
     label: "Contact",
     object: "Phone",
     inNav: true,
-    camera: { position: [-0.36, 1.12, 0.52], target: [-0.4, 0.76, 0.12] },
+    camera: { position: [0.8, 1.12, 0.42], target: [0.72, 0.76, 0.0] },
   },
   {
     id: "resume",
