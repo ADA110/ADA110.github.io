@@ -64,13 +64,16 @@ function armPose(action: Action, i: number, s: number, u: number, headPos: THREE
       o.palm.set(-s * 0.4, 0, -1).normalize();
       o.curl = [0.06, 0.05, 0.04];
       return o;
-    case "leanBack": // hands laced behind his head, elbows out
-      o.wrist.set(headPos.x + s * 0.075, headPos.y + 0.035, headPos.z + 0.085);
+    case "leanBack": {
+      // Hands cupping the back of his head, outside the hood (its back is ~0.14 behind the head bone at
+      // this height): palms toward the head, fingers curving round to meet in the middle, elbows out.
+      head.localToWorld(o.wrist.set(s * 0.115, 0.125, 0.172));
       o.pole.set(s, 0.35, -0.25).normalize();
-      o.dir.set(-s, 0.15, 0.35).normalize();
-      o.palm.set(0, 0.1, -1).normalize();
-      o.curl = [0.55, 0.6, 0.35];
+      o.dir.set(-s, 0.12, 0.28).normalize().transformDirection(head.matrixWorld);
+      o.palm.set(s * 0.15, 0.05, -1).normalize().transformDirection(head.matrixWorld);
+      o.curl = [0.45, 0.5, 0.3];
       return o;
+    }
     case "think": {
       // right fist under his chin, elbow down toward the desk; the left hand rests on the keys
       if (i === 0) return null;
