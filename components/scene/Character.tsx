@@ -1,7 +1,7 @@
 "use client";
 
 import { RoundedBox, useGLTF } from "@react-three/drei";
-import { createPortal, useFrame } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
@@ -26,11 +26,12 @@ const TYPE_TIME = 7;
 const SIP_TIME = 4;
 
 const SKIN = new THREE.Color("#c4906f");
-const HAIR = new THREE.Color("#2b211c");
+const HAIR = new THREE.Color("#1b1513");
 const HOODIE = new THREE.Color("#4a5d86");
 const PANTS = new THREE.Color("#5a5a62");
 
-const KEYS = [new THREE.Vector3(-0.115, T + 0.045, 0.165), new THREE.Vector3(0.075, T + 0.045, 0.165)];
+/** Wrists hover a few cm above the keys so the curled fingertips rest on the keytops. */
+const KEYS = [new THREE.Vector3(-0.115, T + 0.072, 0.16), new THREE.Vector3(0.075, T + 0.072, 0.16)];
 const POLE = [new THREE.Vector3(-0.7, -1, 0.4).normalize(), new THREE.Vector3(0.7, -1, 0.4).normalize()];
 /** Where the hand holds the mug, in the mug's own frame (on the handle), and the handle's outward direction. */
 const GRIP = new THREE.Vector3(0.064, 0.05, 0);
@@ -116,16 +117,17 @@ function bearded(map: THREE.Texture) {
   ctx.filter = "blur(6px)";
   // jaw, chin and sideburns: everything below the cheek line, leaving the lips clear
   ctx.beginPath();
-  ctx.moveTo(40, 470);
-  ctx.bezierCurveTo(60, 620, 160, 700, 300, 720);
-  ctx.bezierCurveTo(380, 735, 430, 735, 470, 760);
-  ctx.lineTo(554, 760);
-  ctx.bezierCurveTo(594, 735, 644, 735, 724, 720);
-  ctx.bezierCurveTo(864, 700, 964, 620, 984, 470);
-  ctx.lineTo(1024, 470);
+  // a full, short beard like the photo: up the cheeks toward the cheekbones, into the sideburns
+  ctx.moveTo(30, 430);
+  ctx.bezierCurveTo(70, 560, 200, 615, 320, 645);
+  ctx.bezierCurveTo(390, 662, 430, 700, 470, 752);
+  ctx.lineTo(554, 752);
+  ctx.bezierCurveTo(594, 700, 634, 662, 704, 645);
+  ctx.bezierCurveTo(824, 615, 954, 560, 994, 430);
+  ctx.lineTo(1024, 430);
   ctx.lineTo(1024, 1024);
   ctx.lineTo(0, 1024);
-  ctx.lineTo(0, 470);
+  ctx.lineTo(0, 430);
   ctx.closePath();
   ctx.fill();
   // moustache
@@ -182,92 +184,121 @@ function restyle(root: THREE.Object3D) {
   });
 }
 
+/** Where hair grows on a unit head direction (face toward -z): hairline high at the forehead, above the ears, low at the nape. */
+function onScalp(n: THREE.Vector3) {
+  const f = Math.abs(Math.atan2(n.x, -n.z)) / Math.PI; // 0 front, 0.5 sides, 1 back
+  const minY = f < 0.5 ? THREE.MathUtils.lerp(0.42, 0.02, f / 0.5) : THREE.MathUtils.lerp(0.02, -0.66, (f - 0.5) / 0.5);
+  return n.y > minY;
+}
+
 /**
- * Curly hair: a few hundred short coiled strands grown over the scalp (fuller on top, short at the
- * sides and back), merged into one mesh. `skull` is the head's box in head-bone space.
+ * Dark curly hair like the photo: a solid cap just outside the scalp (so no skin shows), covered in
+ * several hundred coiled clumps. Full, curly length on top, tumbling a little over the forehead; the sides
+ * and back are cut short, close to the head, down to the nape. Built in head-bone space around the skull ellipsoid.
  */
-function curlyHair(skull: THREE.Box3) {
-  const c = skull.getCenter(new THREE.Vector3());
-  const r = skull.getSize(new THREE.Vector3()).multiplyScalar(0.5);
-  r.x *= 1.02;
-  r.y *= 1.02;
-  r.z *= 1.02;
+function curlyHair(center: THREE.Vector3, radii: THREE.Vector3) {
   let seed = 11;
   const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const parts: THREE.BufferGeometry[] = [];
-  // a cap under the curls so no scalp shows through, front edge at the hairline, lower at the back
-  const cap = new THREE.SphereGeometry(1, 40, 24, 0, Math.PI * 2, 0, 1.6);
-  cap.rotateX(0.55);
-  cap.scale(r.x * 0.97, r.y * 0.97, r.z * 0.97);
-  cap.translate(c.x, c.y, c.z);
-  parts.push(cap.toNonIndexed());
+
+  // cap: a sphere with every triangle outside the hairline dropped
+  const cap = new THREE.SphereGeometry(1, 72, 48);
+  const pos = cap.attributes.position;
+  const idx = cap.index!.array;
+  const keep: number[] = [];
+  const a = new THREE.Vector3();
+  const b = new THREE.Vector3();
+  const c = new THREE.Vector3();
+  for (let t = 0; t < idx.length; t += 3) {
+    a.fromBufferAttribute(pos, idx[t]);
+    b.fromBufferAttribute(pos, idx[t + 1]);
+    c.fromBufferAttribute(pos, idx[t + 2]);
+    if (onScalp(a.add(b).add(c).normalize())) keep.push(idx[t], idx[t + 1], idx[t + 2]);
+  }
+  cap.setIndex(keep);
+  cap.scale(radii.x * 1.02, radii.y * 1.02, radii.z * 1.02);
+  cap.translate(center.x, center.y, center.z);
+  cap.deleteAttribute("uv");
+  parts.push(cap);
+
+  // curls, spread evenly over the scalp (Fibonacci sphere)
+  const N = 1500;
   const n = new THREE.Vector3();
+  const out = new THREE.Vector3();
   const tangent = new THREE.Vector3();
   const side = new THREE.Vector3();
-  for (let i = 0; i < 700; i++) {
-    // a point on the scalp ellipsoid
-    const y = 1 - rand() * 1.65;
-    const a = rand() * Math.PI * 2;
-    const ring = Math.sqrt(Math.max(0, 1 - y * y));
-    n.set(Math.cos(a) * ring, y, Math.sin(a) * ring);
-    if (n.z < -0.25 && n.y < 0.42) continue; // face and forehead
-    if (n.y < -0.1 && n.z < 0.3) continue; // around the ears
-    if (n.y < -0.6 + Math.max(0, -n.z) * 0.4) continue;
-    const top = THREE.MathUtils.smoothstep(n.y, -0.2, 0.7); // 0 at the sides, 1 on top
-    const root = new THREE.Vector3(n.x * r.x, n.y * r.y, n.z * r.z).add(c);
-    // grow outward, drooping a little at the sides
-    const out = n.clone().add(new THREE.Vector3(0, -0.45 * (1 - top), 0)).normalize();
+  for (let i = 0; i < N; i++) {
+    const y = 1 - (2 * (i + 0.5)) / N;
+    const ring = Math.sqrt(1 - y * y);
+    const ang = i * 2.399963;
+    n.set(Math.cos(ang) * ring, y, Math.sin(ang) * ring);
+    if (!onScalp(n)) continue;
+    const front = Math.max(0, -n.z); // toward the face
+    const top = THREE.MathUtils.smoothstep(n.y, 0.38, 0.78); // longer on top, short at the sides and back
+    const fringe = front > 0.55 && n.y < 0.75 ? 1 : 0;
+    const root = new THREE.Vector3(n.x * radii.x, n.y * radii.y, n.z * radii.z).multiplyScalar(1.01).add(center);
+    // grow outward; drape down at the sides and back, tumble forward on top, fall over the forehead at the front
+    out.copy(n).add(v1.set(0, -0.2 * (1 - top), 0)).add(v2.set(0, 0, -0.35 * top));
+    if (fringe) out.multiplyScalar(0.4).add(v1.set(0, -0.8, -0.35));
+    out.normalize();
     tangent.set(rand() - 0.5, rand() - 0.5, rand() - 0.5).cross(out).normalize();
     side.crossVectors(out, tangent);
-    const len = (0.012 + rand() * 0.012) + top * (0.018 + rand() * 0.02);
-    const coil = 0.006 + rand() * 0.004 + top * 0.003;
-    const turns = 1.3 + rand() * 1.4;
+    const len = 0.004 + rand() * 0.004 + top * (0.024 + rand() * 0.012) + fringe * 0.01;
+    const coil = 0.0035 + rand() * 0.002 + top * 0.0045;
+    const turns = 0.9 + rand() * 0.9;
     const phase = rand() * Math.PI * 2;
     const pts: THREE.Vector3[] = [];
-    for (let k = 0; k <= 16; k++) {
-      const f = k / 16;
-      const ang = phase + f * turns * Math.PI * 2;
+    for (let k = 0; k <= 10; k++) {
+      const f = k / 10;
+      const w = phase + f * turns * Math.PI * 2;
       pts.push(
         root
           .clone()
           .addScaledVector(out, f * len)
-          .addScaledVector(tangent, Math.cos(ang) * coil * (0.4 + f * 0.6))
-          .addScaledVector(side, Math.sin(ang) * coil * (0.4 + f * 0.6)),
+          .addScaledVector(tangent, Math.cos(w) * coil * (0.3 + f * 0.7))
+          .addScaledVector(side, Math.sin(w) * coil * (0.3 + f * 0.7)),
       );
     }
-    const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 22, 0.0038 + rand() * 0.0016, 6, false);
-    parts.push(tube.toNonIndexed());
+    const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 14, 0.0042 + rand() * 0.0015 + top * 0.0012, 5, false);
+    tube.deleteAttribute("uv");
+    parts.push(tube);
   }
-  const merged = mergeGeometries(parts.map((g) => {
-    g.deleteAttribute("uv");
-    return g;
-  }));
-  merged.computeVertexNormals();
-  return merged;
+  return mergeGeometries(parts)!;
 }
 
-function Glasses() {
-  const frame = <meshStandardMaterial color="#1b1c20" roughness={0.4} />;
-  return (
-    <group position={[0, 0.062, -0.082]}>
-      {[-1, 1].map((s) => (
-        <group key={s}>
-          <mesh position={[s * 0.034, 0, 0]} scale={[1, 0.8, 1]}>
-            <torusGeometry args={[0.022, 0.0028, 8, 32]} />
-            {frame}
-          </mesh>
-          <mesh position={[s * 0.066, 0.004, 0.045]} rotation={[0, s * 0.12, 0]}>
-            <boxGeometry args={[0.003, 0.004, 0.09]} />
-            {frame}
-          </mesh>
-        </group>
-      ))}
-      <mesh position={[0, 0.006, 0]}>
-        <boxGeometry args={[0.024, 0.003, 0.003]} />
-        {frame}
-      </mesh>
-    </group>
-  );
+/** Rectangular dark frames like the photo, built for the head bone (face toward -z). */
+function makeGlasses() {
+  const mat = new THREE.MeshStandardMaterial({ color: "#1b1c20", roughness: 0.4 });
+  const g = new THREE.Group();
+  g.position.set(0, 0.064, -0.108);
+  const lens = new THREE.Shape();
+  lens.moveTo(-0.021, -0.013);
+  lens.lineTo(0.021, -0.013);
+  lens.lineTo(0.022, 0.014);
+  lens.lineTo(-0.022, 0.014);
+  lens.closePath();
+  const hole = new THREE.Path();
+  hole.moveTo(-0.018, -0.0105);
+  hole.lineTo(0.018, -0.0105);
+  hole.lineTo(0.0188, 0.0112);
+  hole.lineTo(-0.0188, 0.0112);
+  hole.closePath();
+  lens.holes.push(hole);
+  const rim = new THREE.ExtrudeGeometry(lens, { depth: 0.003, bevelEnabled: false });
+  const temple = new THREE.BoxGeometry(0.003, 0.004, 0.1);
+  for (const s of [-1, 1]) {
+    const r = new THREE.Mesh(rim, mat);
+    r.position.set(s * 0.028, 0, 0);
+    r.rotation.y = s * 0.18;
+    const t = new THREE.Mesh(temple, mat);
+    t.position.set(s * 0.053, 0.008, 0.05);
+    t.rotation.y = s * 0.08;
+    g.add(r, t);
+  }
+  const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.003, 0.003), mat);
+  bridge.position.set(0, 0.006, 0.002);
+  g.add(bridge);
+  return g;
 }
 
 function Chair() {
@@ -329,17 +360,15 @@ export function Character() {
     });
     const arms = [side("L"), side("R")];
     const head = bone("J_Bip_C_Head");
-    // Swap the model's anime hair for curls. The skull, in head-bone space, measured from the source model.
+    // Swap the model's anime hair for curls around the skull (head-bone space, measured from the source model).
     model.traverse((o) => {
       const m = o as THREE.Mesh;
       if (m.isMesh && /HAIR/.test((m.material as THREE.Material).name)) m.visible = false;
     });
-    const skull = new THREE.Box3(new THREE.Vector3(-0.095, -0.025, -0.124), new THREE.Vector3(0.095, 0.205, 0.086));
-    const curls = new THREE.Mesh(curlyHair(skull), new THREE.MeshStandardMaterial({ color: HAIR, roughness: 0.85 }));
+    const curls = new THREE.Mesh(curlyHair(new THREE.Vector3(0, 0.08, 0.002), new THREE.Vector3(0.117, 0.128, 0.121)), new THREE.MeshStandardMaterial({ color: HAIR, roughness: 0.85 }));
     curls.castShadow = true;
     head.add(curls);
-    const glasses = new THREE.Group();
-    head.add(glasses);
+    head.add(makeGlasses());
     const lengths = arms.map((a) => [a.lower.position.length(), a.hand.position.length()]);
     const rest = new Map<THREE.Object3D, THREE.Quaternion>();
     model.traverse((o) => rest.set(o, o.quaternion.clone()));
@@ -348,7 +377,6 @@ export function Character() {
       arms,
       lengths,
       rest,
-      glasses,
       spine: bone("J_Bip_C_Spine"),
       chest: bone("J_Bip_C_Chest"),
       neck: bone("J_Bip_C_Neck"),
@@ -434,7 +462,7 @@ export function Character() {
       fore.subVectors(wrist, elbow).normalize();
 
       // Hand direction: forward and down onto the keys; through the mug handle while holding it.
-      dir.set(fore.x * 0.6, -0.35, fore.z).normalize();
+      dir.set(fore.x * 0.6, -0.24, fore.z).normalize();
       if (hold > 0) dir.lerp(v2.copy(handleDir).negate(), hold).normalize();
       // Palm: down on the keys; holding the mug it turns on its side (thumb up), facing the handle.
       palm.set(i === 0 ? 0.15 : -0.15, -1, 0).normalize();
@@ -445,14 +473,19 @@ export function Character() {
       rollTo(a.hand, dir, PALM_LOCAL, palm);
 
       // Fingers: relaxed curl with individual key taps; a full curl around the handle.
-      const sign = i === 0 ? -1 : 1; // curl direction about each finger's local z
+      const sign = i === 0 ? 1 : -1; // curl toward the palm about each finger's local z
       a.fingers.forEach((chain, f) => {
-        const tap = Math.max(0, Math.sin(t * (7 + f * 1.3) + f * 1.9 + i * 0.8)) ** 10;
-        const relaxed = [0.35 - tap * 0.3 + f * 0.05, 0.55 + tap * 0.2, 0.3];
+        // a keystroke is a quick dip of the whole finger, never a flick upward
+        const tap = Math.max(0, Math.sin(t * (7 + f * 1.3) + f * 1.9 + i * 0.8)) ** 12;
+        const relaxed = [0.28 + f * 0.04 + tap * 0.18, 0.3 + f * 0.03, 0.14];
         const held = [1.25, 1.35, 0.9];
         chain.forEach((b, k) => b.rotateZ(sign * THREE.MathUtils.lerp(relaxed[k], held[k], hold)));
       });
-      a.thumb.forEach((b, k) => b.rotateY(-sign * (k === 0 ? 0.25 + hold * 0.4 : 0.2 + hold * 0.3)));
+      // Thumb: tucked in beside the index finger (resting over the handle when holding), lightly bent.
+      a.thumb.forEach((b, k) => {
+        if (k === 0) b.rotateY(sign * (0.5 + hold * 0.15));
+        b.rotateZ(sign * (k === 0 ? 0.2 + hold * 0.2 : 0.18 + hold * 0.3));
+      });
     });
   });
 
@@ -462,7 +495,6 @@ export function Character() {
       <group position={[ROOT.x, SEAT_HIPS - STANDING_HIPS, ROOT.z + 0.06]}>
         <primitive object={rig.model} />
       </group>
-      {createPortal(<Glasses />, rig.glasses)}
     </group>
   );
 }
