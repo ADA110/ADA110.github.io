@@ -1,7 +1,7 @@
 "use client";
 
 import { RoundedBox, useGLTF } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
+import { createPortal, useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
@@ -9,6 +9,7 @@ import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js
 import { useStore } from "@/lib/store";
 import { typing } from "@/lib/typing";
 import { DESK } from "./Desk";
+import { Hotspot } from "./Hotspot";
 import { MUG_REST, MUG_YAW, mugRef } from "./Props";
 
 // Abhi at the desk, lofi style: back to the camera, typing, and every so often reaching for
@@ -61,13 +62,16 @@ function armPose(action: Action, i: number, s: number, u: number, headPos: THREE
   const o = poseOut;
   o.via = null;
   switch (action) {
-    case "stretch": // both arms up and out in a wide V (clear of the headphones), fingers open, a little sway
-      o.wrist.set(headPos.x + s * (0.35 + Math.sin(u * 2.5) * 0.012), headPos.y + 0.32 + Math.sin(u * 2.5 + s) * 0.015, headPos.z + 0.03);
-      o.pole.set(s, 0.1, 0.35).normalize();
-      o.dir.set(s * 0.3, 1, 0).normalize();
-      o.palm.set(-s * 0.5, 0, -1).normalize();
+    case "stretch": {
+      // Hands up together over his head (shoulders shrugged, elbows bowed out so the arms pass outside
+      // the headphones), palms toward each other, with a little reach-and-sway.
+      head.localToWorld(o.wrist.set(s * (0.075 + Math.sin(u * 2.5) * 0.006), 0.36 + Math.sin(u * 2.5 + s) * 0.01, 0.0));
+      o.pole.set(s, -0.15, 0.1).normalize();
+      o.dir.set(-s * 0.2, 1, 0).normalize().transformDirection(head.matrixWorld);
+      o.palm.set(-s, 0, 0).transformDirection(head.matrixWorld);
       o.curl = [0.06, 0.05, 0.04];
       return o;
+    }
     case "leanBack": {
       // Hands cupping the back of his head, outside the hood (its back is ~0.14 behind the head bone at
       // this height): palms toward the head, fingers curving round to meet in the middle, elbows out.
@@ -624,6 +628,7 @@ export function Character() {
     restyle(model);
     const bone = (n: string) => model.getObjectByName(n)!;
     const side = (s: "L" | "R") => ({
+      shoulder: bone(`J_Bip_${s}_Shoulder`),
       upper: bone(`J_Bip_${s}_UpperArm`),
       lower: bone(`J_Bip_${s}_LowerArm`),
       hand: bone(`J_Bip_${s}_Hand`),
@@ -651,7 +656,7 @@ export function Character() {
     });
     for (const m of makeHood(head as THREE.Bone, bone("J_Bip_C_UpperChest") as THREE.Bone, fabric!)) model.add(m);
     head.add(makeGlasses());
-    head.add(makeHeadphones());
+
     const lengths = arms.map((a) => [a.lower.position.length(), a.hand.position.length()]);
     const rest = new Map<THREE.Object3D, THREE.Quaternion>();
     model.traverse((o) => rest.set(o, o.quaternion.clone()));
@@ -664,6 +669,7 @@ export function Character() {
       chest: bone("J_Bip_C_Chest"),
       neck: bone("J_Bip_C_Neck"),
       head,
+      headphones: makeHeadphones(),
     };
   }, [scene]);
 
@@ -687,13 +693,14 @@ export function Character() {
     [],
   );
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    useStore.getState().set({ listening: true });
+    return () => {
       typing.present = false;
       typing.active = false;
-    },
-    [],
-  );
+      useStore.getState().set({ listening: false });
+    };
+  }, []);
 
   // What he's doing right now; typing in between every other action.
   const plan = useRef({ action: "type" as Action, start: -1.5, dur: 6 });
@@ -790,6 +797,8 @@ export function Character() {
     r.arms.forEach((a, i) => {
       const s = i === 0 ? -1 : 1;
       const [la, lb] = r.lengths[i];
+      // a shrug for the big stretch: lifts the arm's root up and out, clear of the headphone cups
+      if (action === "stretch") a.shoulder.rotation.z = s * 0.38 * k;
       // Typing target: a wandering hand with quick strikes (hands just rest on the keys between actions).
       const keys = action === "type" ? 1 : 0;
       const strike = Math.max(0, Math.sin(t * 9 + i * 2.1 + Math.sin(t * 2.7 + i) * 2)) * keys;
@@ -865,6 +874,13 @@ export function Character() {
       <Chair />
       <group position={[ROOT.x, SEAT_HIPS - STANDING_HIPS, ROOT.z + 0.06]}>
         <primitive object={rig.model} />
+        {/* The headphones ride on the head bone; clicking them starts or pauses the lofi beat. */}
+        {createPortal(
+          <Hotspot id="headphones" labelPosition={[-0.03, 1.37, 0.56]} lift={0} onActivate={() => useStore.getState().toggleMusic()}>
+            <primitive object={rig.headphones} />
+          </Hotspot>,
+          rig.head,
+        )}
       </group>
     </group>
   );

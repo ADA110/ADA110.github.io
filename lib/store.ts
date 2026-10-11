@@ -6,9 +6,13 @@ export type Quality = "high" | "low";
 
 type State = {
   section: SectionId | null;
-  hovered: SectionId | "lamp" | null;
+  hovered: SectionId | "lamp" | "headphones" | null;
   lampOn: boolean;
   soundOn: boolean;
+  /** Lofi beat playing (off until the visitor turns it on; the sound toggle silences it too). */
+  musicOn: boolean;
+  /** Someone's at the desk wearing headphones (clicking them toggles the music). */
+  listening: boolean;
   /** Intro finished: the lamp has clicked on and labels may show. */
   introDone: boolean;
   sceneReady: boolean;
@@ -31,6 +35,7 @@ type State = {
 
   set: (partial: Partial<State>) => void;
   toggleLamp: () => void;
+  toggleMusic: () => void;
 };
 
 export const useStore = create<State>((set) => ({
@@ -38,6 +43,8 @@ export const useStore = create<State>((set) => ({
   hovered: null,
   lampOn: false,
   soundOn: true,
+  musicOn: false,
+  listening: false,
   introDone: false,
   sceneReady: false,
   paletteOpen: false,
@@ -54,4 +61,6 @@ export const useStore = create<State>((set) => ({
 
   set: (partial) => set(partial),
   toggleLamp: () => set((s) => ({ lampOn: !s.lampOn })),
+  // turning music on also unmutes; turning it off leaves the sound effects alone
+  toggleMusic: () => set((s) => (s.musicOn && s.soundOn ? { musicOn: false } : { musicOn: true, soundOn: true })),
 }));

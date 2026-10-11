@@ -35,7 +35,14 @@ function Palette() {
           useStore.getState().toggleLamp();
         },
       },
-      { id: "sound", label: "Toggle sound", hint: "Clicks & whooshes", group: "Actions", run: () => set({ soundOn: !useStore.getState().soundOn }) },
+      {
+        id: "music",
+        label: "Play / pause lofi music",
+        hint: "M",
+        group: "Actions",
+        run: () => useStore.getState().toggleMusic(),
+      },
+      { id: "sound", label: "Toggle sound", hint: "Clicks, whooshes & music", group: "Actions", run: () => set({ soundOn: !useStore.getState().soundOn }) },
       ...site.emails.map((email, i) => ({
         id: `email-${i}`,
         label: "Copy email address",

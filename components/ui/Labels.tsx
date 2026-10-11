@@ -20,14 +20,17 @@ export function Labels() {
   const hovered = useStore((s) => s.hovered);
   const section = useStore((s) => s.section);
   const lampOn = useStore((s) => s.lampOn);
+  const listening = useStore((s) => s.listening);
+  const music = useStore((s) => s.musicOn && s.soundOn);
   // Every tag shows briefly after the intro (on phones too), then only on hover, so the desk stays easy to tap.
   const showAll = useStore((s) => s.labelHint && !s.section);
-  const ids = [...SECTIONS.map((s) => s.id), "lamp"] as const;
+  const ids = [...SECTIONS.map((s) => s.id), "lamp", ...(listening ? (["headphones"] as const) : [])];
 
   return (
     <div className="labels" aria-hidden>
       {ids.map((id) => {
-        const text = id === "lamp" ? (lampOn ? "Lamp · lights off" : "Lamp · lights on") : OBJECT_LABELS[id];
+        const text =
+          id === "lamp" ? (lampOn ? "Lamp · lights off" : "Lamp · lights on") : id === "headphones" ? (music ? "Headphones · pause" : "Headphones · listen") : OBJECT_LABELS[id];
         const visible = (hovered === id || (showAll && id !== "lamp")) && section !== id;
         return (
           <div key={id} id={`label-${id}`} className="label-anchor">

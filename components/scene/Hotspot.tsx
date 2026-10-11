@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { useStore } from "@/lib/store";
 import type { SectionId } from "@/lib/sections";
 
-export type HotspotId = SectionId | "lamp";
+export type HotspotId = SectionId | "lamp" | "headphones";
 
 /** World-space anchor for each object's floating label (drawn by <Labels /> in the DOM). */
 const anchors = new Map<HotspotId, THREE.Vector3>();

@@ -10,6 +10,7 @@ import { useStore } from "@/lib/store";
 import { applyWeatherOverride, fetchWeather } from "@/lib/weather";
 import { CommandPalette } from "./ui/CommandPalette";
 import { Labels } from "./ui/Labels";
+import { LofiPlayer } from "./LofiPlayer";
 import { Nav } from "./ui/Nav";
 import { Panel } from "./ui/Panel";
 import { TextVersion } from "./ui/TextVersion";
@@ -149,6 +150,8 @@ export function Experience() {
       } else if (e.key.toLowerCase() === "l" && !e.metaKey && !e.ctrlKey) {
         playClick();
         s.toggleLamp();
+      } else if (e.key.toLowerCase() === "m" && !e.metaKey && !e.ctrlKey) {
+        s.toggleMusic();
       }
     };
     window.addEventListener("keydown", onKey);
@@ -181,6 +184,7 @@ export function Experience() {
           <span className="dot" aria-hidden /> Previewing the sky · <strong>Back to live</strong>
         </button>
       )}
+      <LofiPlayer />
       <CommandPalette />
       {/* Screen-reader & no-JS friendly link list (visually hidden) */}
       <nav className="sr-only" aria-label="All sections">
