@@ -470,6 +470,64 @@ function fringe() {
   return curls;
 }
 
+/**
+ * Over-ear headphones worn over the hood, in head-bone space (face toward -z): a band arcing over the
+ * top of the hood and cushioned cups resting on its sides. Sized to clear the hood's outer surface.
+ */
+function makeHeadphones() {
+  const shell = new THREE.MeshStandardMaterial({ color: "#e9e2d6", roughness: 0.55 });
+  const cushion = new THREE.MeshStandardMaterial({ color: "#2b2a2e", roughness: 0.9 });
+  const metal = new THREE.MeshStandardMaterial({ color: "#b8b4ad", roughness: 0.35, metalness: 0.8 });
+  const g = new THREE.Group();
+  const cx = 0.149; // cup centre, just outside the hood at ear height
+  const cy = 0.056;
+  const cz = 0.008;
+  // band: an arc around (0, 0.09) clearing the hood, from cup to cup
+  const R = 0.157;
+  const end = Math.asin(THREE.MathUtils.clamp((cy + 0.03 - 0.09) / R, -1, 1)); // where it meets the yokes
+  const pts: THREE.Vector3[] = [];
+  for (let k = 0; k <= 40; k++) {
+    const a = THREE.MathUtils.lerp(Math.PI - end, end, k / 40); // left → over the top → right
+    pts.push(new THREE.Vector3(Math.cos(a) * R, 0.09 + Math.sin(a) * R, cz));
+  }
+  const arc = new THREE.CatmullRomCurve3(pts);
+  const band = new THREE.Mesh(new THREE.TubeGeometry(arc, 64, 0.0075, 10, false), shell);
+  band.scale.set(1, 1, 1.4); // a flatter, wider band
+  g.add(band);
+  // padded underside along the top of the band
+  const pad = new THREE.Mesh(
+    new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.slice(9, 32).map((p) => new THREE.Vector3(p.x * 0.955, 0.09 + (p.y - 0.09) * 0.955, cz))), 32, 0.0068, 8, false),
+    cushion,
+  );
+  pad.scale.set(1, 1, 1.5);
+  g.add(pad);
+  for (const s of [-1, 1]) {
+    const side = new THREE.Group();
+    side.position.set(s * cx, cy, cz);
+    // yoke: a thin metal fork from the band down around the cup
+    const yoke = new THREE.Mesh(new THREE.TorusGeometry(0.044, 0.0025, 6, 24, Math.PI), metal);
+    yoke.rotation.set(0, Math.PI / 2, 0);
+    yoke.position.set(s * 0.004, 0, 0);
+    side.add(yoke);
+    // cup: a rounded shell facing out, with a thick cushion against the hood
+    const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.041, 0.043, 0.026, 32), shell);
+    cup.rotation.z = Math.PI / 2;
+    side.add(cup);
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.041, 32, 12, 0, Math.PI * 2, 0, Math.PI / 2), shell);
+    cap.rotation.z = -s * (Math.PI / 2);
+    cap.scale.set(1, 0.32, 1);
+    cap.position.x = s * 0.013;
+    side.add(cap);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.034, 0.0095, 12, 32), cushion);
+    ring.rotation.y = Math.PI / 2;
+    ring.position.x = -s * 0.015;
+    side.add(ring);
+    g.add(side);
+  }
+  g.traverse((o) => (o.castShadow = true));
+  return g;
+}
+
 /** Rectangular dark frames like the photo, built for the head bone (face toward -z). */
 function makeGlasses() {
   const mat = new THREE.MeshStandardMaterial({ color: "#1b1c20", roughness: 0.4 });
@@ -578,6 +636,7 @@ export function Character() {
     });
     for (const m of makeHood(head as THREE.Bone, bone("J_Bip_C_UpperChest") as THREE.Bone, fabric!)) model.add(m);
     head.add(makeGlasses());
+    head.add(makeHeadphones());
     const lengths = arms.map((a) => [a.lower.position.length(), a.hand.position.length()]);
     const rest = new Map<THREE.Object3D, THREE.Quaternion>();
     model.traverse((o) => rest.set(o, o.quaternion.clone()));
