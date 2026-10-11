@@ -15,6 +15,11 @@ import { Hotspot } from "./Hotspot";
 
 const T = DESK.top;
 
+/** The mug's spot on the desk, and a handle so the character can pick it up. */
+export const MUG_REST = new THREE.Vector3(0.27, T, 0.15);
+export const MUG_YAW = -0.6;
+export const mugRef: { current: THREE.Group | null } = { current: null };
+
 // ---------------- Mug + steam ----------------
 
 const steamFrag = /* glsl */ `
@@ -84,7 +89,7 @@ function Mug() {
   ]);
   const handle = useMemo(() => new THREE.TorusGeometry(0.025, 0.0058, 16, 32, Math.PI), []);
   return (
-    <group position={[0.57, T, 0.14]} rotation={[0, -0.6, 0]}>
+    <group ref={(g) => void (mugRef.current = g)} position={MUG_REST.toArray()} rotation={[0, MUG_YAW, 0]}>
       <mesh geometry={body} castShadow receiveShadow>
         <meshPhysicalMaterial color="#e7ddcc" roughness={0.25} clearcoat={1} clearcoatRoughness={0.08} side={THREE.DoubleSide} />
       </mesh>

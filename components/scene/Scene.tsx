@@ -13,6 +13,7 @@ import { LabelProjector } from "./Hotspot";
 import { Lamp } from "./Lamp";
 import { Lights } from "./Lights";
 import { Monitor } from "./Monitor";
+import { Character } from "./Character";
 import { DeskNotes, NotesPile } from "./NotesPile";
 import { Outdoors } from "./Outdoors";
 import { Props } from "./Props";
@@ -58,6 +59,7 @@ export default function Scene() {
         <Outdoors />
         <NotesPile />
         <DeskNotes />
+        <Character />
         <Lights />
         <CameraRig />
         <LabelProjector />
