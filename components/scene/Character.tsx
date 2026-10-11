@@ -2,11 +2,12 @@
 
 import { RoundedBox, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { useStore } from "@/lib/store";
+import { typing } from "@/lib/typing";
 import { DESK } from "./Desk";
 import { MUG_REST, MUG_YAW, mugRef } from "./Props";
 
@@ -550,6 +551,14 @@ export function Character() {
     [],
   );
 
+  useEffect(
+    () => () => {
+      typing.present = false;
+      typing.active = false;
+    },
+    [],
+  );
+
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     const section = useStore.getState().section;
@@ -561,6 +570,8 @@ export function Character() {
     // The type → sip loop.
     const cycle = (t + 2) % (TYPE_TIME + SIP_TIME);
     const u = cycle - TYPE_TIME; // < 0 while typing
+    typing.present = true;
+    typing.active = u < 0; // the monitor fills in only while his hands are on the keys
     const reach = u < 0 ? 0 : ease(u / 0.8) - ease((u - 3.1) / 0.8);
     const lift = u < 0 ? 0 : ease((u - 0.8) / 0.8) - ease((u - 2.4) / 0.7);
     const tilt = lift * (0.6 + 0.4 * ease((u - 1.5) / 0.5) - 0.4 * ease((u - 2.1) / 0.4));
