@@ -61,11 +61,11 @@ function armPose(action: Action, i: number, s: number, u: number, headPos: THREE
   const o = poseOut;
   o.via = null;
   switch (action) {
-    case "stretch": // both arms up overhead, fingers open, a little reach-and-sway
-      o.wrist.set(headPos.x + s * (0.11 + Math.sin(u * 2.5) * 0.01), headPos.y + 0.36 + Math.sin(u * 2.5 + s) * 0.015, headPos.z + 0.02);
-      o.pole.set(s, 0.25, 0.35).normalize();
-      o.dir.set(-s * 0.15, 1, -0.05).normalize();
-      o.palm.set(-s * 0.4, 0, -1).normalize();
+    case "stretch": // both arms up and out in a wide V (clear of the headphones), fingers open, a little sway
+      o.wrist.set(headPos.x + s * (0.35 + Math.sin(u * 2.5) * 0.012), headPos.y + 0.32 + Math.sin(u * 2.5 + s) * 0.015, headPos.z + 0.03);
+      o.pole.set(s, 0.1, 0.35).normalize();
+      o.dir.set(s * 0.3, 1, 0).normalize();
+      o.palm.set(-s * 0.5, 0, -1).normalize();
       o.curl = [0.06, 0.05, 0.04];
       return o;
     case "leanBack": {
