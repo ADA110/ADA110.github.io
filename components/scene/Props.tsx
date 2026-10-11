@@ -12,6 +12,7 @@ import { DESK } from "./Desk";
 import { useLathe } from "./helpers";
 import { cloneScanned, useModel, useShadowClone, withArtwork } from "./pbr";
 import { Hotspot } from "./Hotspot";
+import { NO_INK_LAYER } from "./style/ink";
 
 const T = DESK.top;
 
@@ -67,7 +68,7 @@ function Steam() {
   return (
     <Billboard position={[0, 0.17, 0]} lockX lockZ>
       {mats.map((m, i) => (
-        <mesh key={i} material={m} position={[i * 0.006 - 0.003, 0, i * 0.002]} renderOrder={10}>
+        <mesh key={i} ref={(o) => void o?.layers.set(NO_INK_LAYER)} material={m} position={[i * 0.006 - 0.003, 0, i * 0.002]} renderOrder={10}>
           <planeGeometry args={[0.07, 0.16]} />
         </mesh>
       ))}

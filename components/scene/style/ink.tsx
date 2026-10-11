@@ -2,7 +2,8 @@
 
 import { EffectComposerContext } from "@react-three/postprocessing";
 import { BlendFunction, Effect, EffectAttribute } from "postprocessing";
-import { useContext, useMemo } from "react";
+import { useThree } from "@react-three/fiber";
+import { useContext, useEffect, useMemo } from "react";
 import * as THREE from "three";
 
 // ---------------- line art ----------------
@@ -52,9 +53,27 @@ class InkEffect extends Effect {
   }
 }
 
+/** Objects on this layer are drawn but get no ink lines (soft things like steam, whose quads would outline). */
+export const NO_INK_LAYER = 3;
+
 export function Ink() {
   const { normalPass } = useContext(EffectComposerContext);
+  const camera = useThree((s) => s.camera);
   const effect = useMemo(() => new InkEffect(normalPass?.texture ?? null), [normalPass]);
+  // The normal pass (where edges come from) skips the no-ink layer; the main render still shows it.
+  useEffect(() => {
+    if (!normalPass) return;
+    camera.layers.enable(NO_INK_LAYER);
+    const render = normalPass.render;
+    normalPass.render = function (...args: Parameters<typeof render>) {
+      camera.layers.disable(NO_INK_LAYER);
+      render.apply(this, args);
+      camera.layers.enable(NO_INK_LAYER);
+    };
+    return () => {
+      normalPass.render = render;
+    };
+  }, [normalPass, camera]);
   return <primitive object={effect} dispose={null} />;
 }
 
