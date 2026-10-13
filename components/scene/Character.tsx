@@ -25,11 +25,10 @@ const STANDING_HIPS = 1.008;
 const SEAT_HIPS = 0.52;
 
 /** Things he does between bursts of typing, how long each takes, and how often (sips are the favourite). */
-type Action = "type" | "sip" | "stretch" | "leanBack" | "think" | "window" | "neck";
-const DURATION: Record<Exclude<Action, "type">, number> = { sip: 4, stretch: 4.4, leanBack: 5, think: 5, window: 4, neck: 3.2 };
+type Action = "type" | "sip" | "leanBack" | "think" | "window" | "neck";
+const DURATION: Record<Exclude<Action, "type">, number> = { sip: 4, leanBack: 5, think: 5, window: 4, neck: 3.2 };
 const WEIGHTS: [Exclude<Action, "type">, number][] = [
   ["sip", 3],
-  ["stretch", 1],
   ["leanBack", 1],
   ["think", 1.2],
   ["window", 1.4],
@@ -62,17 +61,6 @@ function armPose(action: Action, i: number, s: number, u: number, headPos: THREE
   const o = poseOut;
   o.via = null;
   switch (action) {
-    case "stretch": {
-      // Hands up together, palms touching, just above and in front of his head; elbows bend forward and
-      // a little out, so the arms rise in front of the headphones instead of through them (checked with
-      // a clearance probe: 5 cm or more all the way up and down).
-      head.localToWorld(o.wrist.set(s * (0.05 + Math.sin(u * 2.5) * 0.006), 0.28 + Math.sin(u * 2.5 + s) * 0.01, -0.2));
-      o.pole.set(s * 0.6, -0.2, -1).normalize();
-      o.dir.set(-s * 0.2, 1, 0).normalize().transformDirection(head.matrixWorld);
-      o.palm.set(-s, 0, 0).transformDirection(head.matrixWorld);
-      o.curl = [0.06, 0.05, 0.04];
-      return o;
-    }
     case "leanBack": {
       // Hands cupping the back of his head, outside the hood (its back is ~0.14 behind the head bone at
       // this height): palms toward the head, fingers curving round to meet in the middle, elbows out.
@@ -739,10 +727,7 @@ export function Character() {
     let headX = 0;
     let headY = 0;
     let headZ = 0;
-    if (action === "stretch") {
-      spineX = 0.2;
-      headX = 0.32 + Math.sin(u * 2.5) * 0.03;
-    } else if (action === "leanBack") {
+    if (action === "leanBack") {
       spineX = 0.26;
       headX = 0.12;
     } else if (action === "think") {
@@ -798,8 +783,6 @@ export function Character() {
     r.arms.forEach((a, i) => {
       const s = i === 0 ? -1 : 1;
       const [la, lb] = r.lengths[i];
-      // a shrug for the big stretch: lifts the arm's root up and out, clear of the headphone cups
-      if (action === "stretch") a.shoulder.rotation.z = s * 0.4 * k;
       // Typing target: a wandering hand with quick strikes (hands just rest on the keys between actions).
       const keys = action === "type" ? 1 : 0;
       const strike = Math.max(0, Math.sin(t * 9 + i * 2.1 + Math.sin(t * 2.7 + i) * 2)) * keys;
