@@ -90,8 +90,8 @@ function armPose(action: Action, i: number, s: number, u: number, headPos: THREE
 
 const SKIN = new THREE.Color("#c4906f");
 const HAIR = new THREE.Color("#1b1513");
-const HOODIE = new THREE.Color("#b3302b"); // red
-const HOODIE_INSIDE = new THREE.Color("#6e1c19");
+const HOODIE = new THREE.Color("#a8443b"); // softly worn red cotton
+const HOODIE_INSIDE = new THREE.Color("#75332d");
 const PANTS = new THREE.Color("#5a5a62");
 
 /** Wrists hover a few cm above the keys so the curled fingertips rest on the keytops. */
@@ -238,14 +238,25 @@ function hoodieFabric(map: THREE.Texture) {
   return tex;
 }
 
+/**
+ * Mesh space → the model's rest pose in meters. The file's positions are quantized (squeezed into a unit
+ * box) and its bind matrices undo that, so it's a bone's rest transform times its inverse bind matrix.
+ */
+function restSpace(mesh: THREE.SkinnedMesh) {
+  const bone = mesh.skeleton.bones[0];
+  bone.updateWorldMatrix(true, false);
+  return new THREE.Matrix4().multiplyMatrices(bone.matrixWorld, mesh.skeleton.boneInverses[0]).multiply(mesh.bindMatrix);
+}
+
 /** Drops body skin that the hoodie covers (torso and arms to the wrists), so it can't poke through the fabric; neck and hands stay. */
 function hideCovered(mesh: THREE.SkinnedMesh) {
   const g = mesh.geometry;
   const pos = g.attributes.position as THREE.BufferAttribute;
   const idx = g.index!.array;
   const keep: number[] = [];
+  const rest = restSpace(mesh);
   const covered = (i: number) => {
-    v1.fromBufferAttribute(pos, i).applyMatrix4(mesh.bindMatrix);
+    v1.fromBufferAttribute(pos, i).applyMatrix4(rest);
     const neck = v1.y > 1.42 && Math.abs(v1.x) < 0.075;
     return v1.y > 0.92 && v1.y < 1.5 && Math.abs(v1.x) < 0.6 && !neck;
   };
@@ -256,9 +267,7 @@ function hideCovered(mesh: THREE.SkinnedMesh) {
 }
 
 /**
- * Tailors the hoodie: removes the model's lowered hood (its own block of the texture: the middle columns
- * of the upper half) so only the raised hood shows, and takes in the baggy body and sleeves a little.
- * Positions are adjusted in bind-pose model space through the mesh's bind matrices.
+ * Removes the original folded hood and collar so the raised hood has a single clean neckline.
  */
 function tailor(mesh: THREE.SkinnedMesh) {
   const g = mesh.geometry;
@@ -266,35 +275,34 @@ function tailor(mesh: THREE.SkinnedMesh) {
   const pos = g.attributes.position as THREE.BufferAttribute;
   const idx = g.index!.array;
   const keep: number[] = [];
+  const rest = restSpace(mesh);
   const p = new THREE.Vector3();
   for (let t = 0; t < idx.length; t += 3) {
     const u = (uv.getX(idx[t]) + uv.getX(idx[t + 1]) + uv.getX(idx[t + 2])) / 3;
     const v = (uv.getY(idx[t]) + uv.getY(idx[t + 1]) + uv.getY(idx[t + 2])) / 3;
-    p.set(0, 0, 0);
-    for (let k = 0; k < 3; k++) p.add(v1.fromBufferAttribute(pos, idx[t + k]).applyMatrix4(mesh.bindMatrix));
-    p.divideScalar(3);
-    // the hood block, but only behind the neck: its front pieces double as the hoodie's collar
-    const hood = u > 0.3 && u < 0.7 && v < 0.5 && p.z > -0.02;
+    // Remove the entire folded hood; retaining its collar leaves a second rim under the raised hood.
+    const hood = u > 0.3 && u < 0.7 && v < 0.5;
     if (!hood) keep.push(idx[t], idx[t + 1], idx[t + 2]);
   }
   g.setIndex(keep);
-
+  // Slightly fitted cotton: take in the waist and sleeve volume with gradual transitions.
+  // Float attributes are essential here; the source uses normalized integer compression.
+  const fitted = new Float32Array(pos.count * 3);
+  const inverse = rest.clone().invert();
   for (let i = 0; i < pos.count; i++) {
-    p.fromBufferAttribute(pos, i).applyMatrix4(mesh.bindMatrix);
-    if (p.y > 0.9 && p.y < 1.34 && Math.abs(p.x) < 0.22) {
-      // body below the shoulders: a slimmer fit around the spine, easing back to full width at the shoulders
-      const ease = smooth(p.y, 1.34, 1.24);
-      p.x *= 1 - 0.07 * ease;
-      p.z = -0.01 + (p.z + 0.01) * (1 - 0.1 * ease);
-    } else if (Math.abs(p.x) >= 0.22 && p.y > 1.2) {
-      // sleeves (arms out along x in the rest pose): closer around each arm
-      p.y = 1.4 + (p.y - 1.4) * 0.88;
-      p.z = -0.01 + (p.z + 0.01) * 0.88;
-    }
-    p.applyMatrix4(mesh.bindMatrixInverse);
-    pos.setXYZ(i, p.x, p.y, p.z);
+    p.fromBufferAttribute(pos, i).applyMatrix4(rest);
+    const torso = smooth(p.y, 1.38, 1.23) * (1 - smooth(Math.abs(p.x), 0.16, 0.25));
+    p.x *= 1 - 0.055 * torso;
+    p.z = -0.01 + (p.z + 0.01) * (1 - 0.07 * torso);
+    const sleeve = smooth(Math.abs(p.x), 0.19, 0.32) * (1 - smooth(Math.abs(p.x), 0.54, 0.63));
+    p.y = 1.395 + (p.y - 1.395) * (1 - 0.08 * sleeve);
+    p.z = -0.015 + (p.z + 0.015) * (1 - 0.08 * sleeve);
+    p.applyMatrix4(inverse);
+    fitted.set([p.x, p.y, p.z], i * 3);
   }
-  pos.needsUpdate = true;
+  g.setAttribute("position", new THREE.BufferAttribute(fitted, 3));
+  g.deleteAttribute("normal");
+  g.computeVertexNormals();
 }
 
 /** Unlit VRoid materials → lit standard materials (the site turns them into toon), recoloured. */
@@ -342,8 +350,8 @@ function restyle(root: THREE.Object3D) {
 }
 
 
-/** Sharp crease ridges: flat most of the way, peaking once per half-period. */
-const ridge = (x: number) => (1 - Math.abs(Math.sin(x))) ** 3;
+/** Broad, rounded fabric folds rather than sharp ridges. */
+const ridge = (x: number) => (0.5 + 0.5 * Math.cos(x)) ** 2;
 
 const smooth = (x: number, a: number, b: number) => {
   const t = THREE.MathUtils.clamp((x - a) / (b - a), 0, 1);
@@ -351,34 +359,59 @@ const smooth = (x: number, a: number, b: number) => {
 };
 
 /**
- * The hood, worn up: a snug shell just off the head that frames the face and drapes onto the shoulders
- * and upper back. Built in the model's rest pose and skinned to the same skeleton: the top follows the
+ * The hood, worn up: a snug shell just off the head that frames the face and joins the hoodie
+ * at the neckline. Built in the model's rest pose and skinned to the same skeleton: the top follows the
  * head, the bottom stays with the chest, blending through the neck. (The model's own lowered hood is
  * removed in `tailor`.) Returns the outside and a darker inside.
  */
-function makeHood(head: THREE.Bone, chest: THREE.Bone, fabric: THREE.Material) {
+function makeHood(head: THREE.Bone, chest: THREE.Bone, garment: THREE.SkinnedMesh) {
+  const fabric = garment.material as THREE.MeshStandardMaterial;
+  // Sample the actual tailored shirt in its rest pose, so the hood can join its surface.
+  const probeGeometry = garment.geometry.clone();
+  const source = probeGeometry.attributes.position;
+  const decoded = new Float32Array(source.count * 3);
+  const rest = restSpace(garment);
+  const point = new THREE.Vector3();
+  for (let i = 0; i < source.count; i++) {
+    point.fromBufferAttribute(source, i).applyMatrix4(rest);
+    decoded.set(point.toArray(), i * 3);
+  }
+  probeGeometry.setAttribute("position", new THREE.BufferAttribute(decoded, 3));
+  probeGeometry.deleteAttribute("normal");
+  probeGeometry.computeVertexNormals();
+  probeGeometry.computeBoundingBox();
+  probeGeometry.computeBoundingSphere();
+  const probeMaterial = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
+  const probe = new THREE.Mesh(probeGeometry, probeMaterial);
+  probe.updateMatrixWorld();
+  const ray = new THREE.Raycaster();
+  const direction = new THREE.Vector3();
+  const seamNormals: (THREE.Vector3 | null)[] = [];
+  const seamWeights: number[] = [];
   // Its own two-bone skeleton, bound at the rest pose in model space (the file's bind data is in
   // compressed mesh space, so it can't be reused for plain geometry).
   const skeleton = new THREE.Skeleton([head, chest], [head.matrixWorld.clone().invert(), chest.matrixWorld.clone().invert()]);
   // meridian profile (distance from the head's vertical axis, height), crown to shoulders
   const profile = new THREE.SplineCurve(
     [
-      [0.0, 1.776],
-      [0.072, 1.764],
-      [0.116, 1.722],
-      [0.131, 1.65],
-      [0.127, 1.575],
-      [0.106, 1.51],
-      [0.096, 1.47],
-      [0.11, 1.43],
-      [0.135, 1.397],
-      [0.152, 1.37],
-      [0.162, 1.35],
-      [0.166, 1.332],
+      [0.0, 1.765],
+      [0.066, 1.755],
+      [0.106, 1.719],
+      [0.121, 1.65],
+      [0.114, 1.575],
+      [0.096, 1.51],
+      [0.092, 1.47],
+      // joins the hoodie at the neckline, the last rows tucking just under its surface so there's no
+      // separate rim lying across the shoulders
+      [0.102, 1.44],
+      [0.110, 1.415],
+      [0.116, 1.395],
+      [0.108, 1.375],
+      [0.096, 1.365],
     ].map(([r, y]) => new THREE.Vector2(r, y)),
   );
-  const rows = 34;
-  const cols = 72;
+  const rows = 56;
+  const cols = 96;
   const hi = 0;
   const ci = 1;
   const pos: number[] = [];
@@ -404,18 +437,42 @@ function makeHood(head: THREE.Bone, chest: THREE.Bone, fabric: THREE.Material) {
       // (faded out near the face opening, where the columns are pinched together)
       const gather = smooth(y, 1.56, 1.44) * smooth(Math.min(th, Math.PI * 2 - th) - open, 0.05, 0.5);
       const folds =
-        0.0055 * ridge(th * 4.5 + y * 14) * gather +
-        0.003 * ridge(th * 8.5 + 1.3) * gather * gather +
-        0.0045 * ridge((y - 1.47) * 65) * back * smooth(y, 1.6, 1.53) * (1 - smooth(y, 1.47, 1.43)) +
-        0.0025 * ridge(th * 2.5 + 0.6) * back * smooth(y, 1.62, 1.72) -
-        0.0025 * Math.exp(-(((th - Math.PI) * 9) ** 2)) * smooth(y, 1.5, 1.6);
+        0.003 * ridge(th * 5.0 + (y - 1.44) * 17 + 0.4) * gather +
+        0.0015 * ridge(th * 8.0 - (y - 1.44) * 10) * gather +
+        // A gentle sag across the nape, with a shallow diagonal fold on either side.
+        0.0025 * Math.sin((y - 1.45) * 44 + Math.abs(th - Math.PI) * 1.8) * back
+          * smooth(y, 1.62, 1.54) * (1 - smooth(y, 1.44, 1.38)) -
+        0.0018 * Math.exp(-(((th - Math.PI) * 13) ** 2)) * smooth(y, 1.44, 1.6);
       const r = pt.x + folds;
-      // the base settles onto the shoulders: wider side to side, shallower front to back
       const base = smooth(y, 1.43, 1.35);
-      pos.push(Math.sin(th) * r * (0.95 + 0.3 * base), y, -Math.cos(th) * r * (1 - 0.32 * base) + 0.006 + 0.016 * back * lower);
-      // UVs onto a plain patch of the hoodie's own fabric texture, so it shades exactly like the body
-      uvs.push(0.42 + (i / cols) * 0.06, 0.64 + (k / rows) * 0.06);
-      const w = smooth(y, 1.45, 1.57); // 1 → head, 0 → chest
+      const sag = 0.003 * back * smooth(y, 1.69, 1.54) * (1 - base);
+      point.set(Math.sin(th) * r * (0.95 + 0.3 * base), y - sag,
+        -Math.cos(th) * r * (1 - 0.32 * base) + 0.006 + 0.009 * back * lower);
+      const uv = new THREE.Vector2(0.42 + (i / cols) * 0.06, 0.64 + (k / rows) * 0.06);
+      let seamNormal: THREE.Vector3 | null = null;
+      let blend = 0;
+      if (y < 1.49 && back > 0.45) {
+        direction.set(point.x, 0, point.z).normalize();
+        ray.set(new THREE.Vector3(0, point.y, 0), direction);
+        ray.far = 0.28;
+        const hit = ray.intersectObject(probe, false)[0];
+        if (hit?.uv && hit.face) {
+          blend = smooth(y, 1.49, 1.395) * smooth(back, 0.45, 0.85);
+          seamNormal = (hit.normal ?? hit.face.normal).clone();
+          if (seamNormal.dot(direction) < 0) seamNormal.negate();
+          // End just inside the shirt to avoid a visible second hem or z-fighting.
+          const inset = 0.001 - 0.004 * smooth(y, 1.42, 1.365);
+          const offset = hit.point.clone().addScaledVector(seamNormal, inset).sub(point);
+          offset.clampLength(0, 0.028);
+          point.addScaledVector(offset, blend);
+          // Atlas regions are disconnected: interpolating their UVs would paint a dark collar band.
+        }
+      }
+      pos.push(...point.toArray());
+      uvs.push(uv.x, uv.y);
+      seamNormals.push(seamNormal);
+      seamWeights.push(blend);
+      const w = smooth(y, 1.43, 1.63); // 1 → head, 0 → chest
       skinIndex.push(hi, ci, 0, 0);
       skinWeight.push(w, 1 - w, 0, 0);
     }
@@ -433,6 +490,14 @@ function makeHood(head: THREE.Bone, chest: THREE.Bone, fabric: THREE.Material) {
   g.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
   g.setIndex(index);
   g.computeVertexNormals();
+  const normals = g.attributes.normal;
+  seamNormals.forEach((normal, i) => {
+    if (!normal) return;
+    point.fromBufferAttribute(normals, i).lerp(normal, seamWeights[i]).normalize();
+    normals.setXYZ(i, point.x, point.y, point.z);
+  });
+  probeGeometry.dispose();
+  probeMaterial.dispose();
   const make = (material: THREE.Material) => {
     const m = new THREE.SkinnedMesh(g, material);
     m.castShadow = true;
@@ -487,11 +552,11 @@ function makeHeadphones() {
   const cushion = new THREE.MeshStandardMaterial({ color: "#2b2a2e", roughness: 0.9 });
   const metal = new THREE.MeshStandardMaterial({ color: "#b8b4ad", roughness: 0.35, metalness: 0.8 });
   const g = new THREE.Group();
-  const cx = 0.149; // cup centre, just outside the hood at ear height
+  const cx = 0.137; // cup centre, just outside the hood at ear height
   const cy = 0.056;
   const cz = 0.008;
   // band: an arc around (0, 0.09) clearing the hood, from cup to cup
-  const R = 0.157;
+  const R = 0.143;
   const end = Math.asin(THREE.MathUtils.clamp((cy + 0.03 - 0.09) / R, -1, 1)); // where it meets the yokes
   const pts: THREE.Vector3[] = [];
   for (let k = 0; k <= 40; k++) {
@@ -638,12 +703,13 @@ export function Character() {
     // Hood up: hide the model's hair; a few curls show under the front edge.
     head.add(fringe());
     model.updateMatrixWorld(true);
-    let fabric: THREE.Material | null = null;
+    let garment: THREE.SkinnedMesh | null = null;
     model.traverse((o) => {
-      const mat = (o as THREE.Mesh).material as THREE.Material | undefined;
-      if (!fabric && mat && !Array.isArray(mat) && /Tops/.test(mat.name)) fabric = mat;
+      const mesh = o as THREE.SkinnedMesh;
+      const mat = mesh.material as THREE.Material | undefined;
+      if (mesh.isSkinnedMesh && mat && !Array.isArray(mat) && /Tops/.test(mat.name)) garment = mesh;
     });
-    for (const m of makeHood(head as THREE.Bone, bone("J_Bip_C_UpperChest") as THREE.Bone, fabric!)) model.add(m);
+    for (const m of makeHood(head as THREE.Bone, bone("J_Bip_C_UpperChest") as THREE.Bone, garment!)) model.add(m);
     head.add(makeGlasses());
 
     const lengths = arms.map((a) => [a.lower.position.length(), a.hand.position.length()]);
@@ -783,6 +849,11 @@ export function Character() {
     r.arms.forEach((a, i) => {
       const s = i === 0 ? -1 : 1;
       const [la, lb] = r.lengths[i];
+      // The collarbone takes part of the swing down from the T-pose (dropped and rolled forward), so the
+      // upper arm turns less and the sleeve flows into the shoulder instead of folding at the seam. It
+      // eases back to neutral when the hands go up behind his head.
+      const settle = 1 - (action === "leanBack" ? k : 0);
+      a.shoulder.rotation.set(0, s * 0.22 * settle, -s * 0.1 * settle);
       // Typing target: a wandering hand with quick strikes (hands just rest on the keys between actions).
       const keys = action === "type" ? 1 : 0;
       const strike = Math.max(0, Math.sin(t * 9 + i * 2.1 + Math.sin(t * 2.7 + i) * 2)) * keys;

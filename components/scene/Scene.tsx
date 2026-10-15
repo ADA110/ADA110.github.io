@@ -14,6 +14,7 @@ import { Lamp } from "./Lamp";
 import { Lights } from "./Lights";
 import { Monitor } from "./Monitor";
 import { Character } from "./Character";
+import { SleepingCat } from "./SleepingCat";
 import { DeskNotes, NotesPile } from "./NotesPile";
 import { Outdoors } from "./Outdoors";
 import { Props } from "./Props";
@@ -50,6 +51,7 @@ export default function Scene() {
       {sceneReady && <PerformanceMonitor onDecline={() => useStore.getState().set({ quality: "low" })} />}
       <Suspense fallback={null}>
         <Room />
+        <SleepingCat />
         <Desk />
         <Monitor />
         <Lamp />

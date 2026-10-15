@@ -22,7 +22,7 @@ export type Section = {
 };
 
 export const HOME_CAMERA = {
-  position: [1.6, 1.62, 2.15] as Vec3,
+  position: [1.91, 1.75, 2.62] as Vec3,
   target: [0.05, 0.98, -0.2] as Vec3,
 };
 
