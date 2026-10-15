@@ -1,6 +1,6 @@
 // A tiny lofi beat, synthesized live with the Web Audio API (no audio files): soft electric-piano
-// chords over two jazzy progressions, a warm bass, a swung boom-bap kit, the odd bell melody, vinyl
-// hiss and crackle, a little tape wobble, all through a muffled low-pass. Only starts on a visitor's click.
+// chords over two jazzy progressions, a warm bass, a swung boom-bap kit, the odd bell melody, a little tape
+// wobble, all through a muffled low-pass. Only starts on a visitor's click.
 
 const BPM = 74;
 const SIXTEENTH = 60 / BPM / 4;
@@ -30,16 +30,15 @@ let ac: AudioContext | null = null;
 let bus: GainNode | null = null;
 let master: GainNode | null = null;
 let wobble: GainNode | null = null;
-let vinyl: AudioBufferSourceNode[] = [];
 let timer: ReturnType<typeof setInterval> | null = null;
 let step = 0;
 let nextTime = 0;
 let noise: AudioBuffer | null = null;
 
-function noiseBuffer(seconds: number, sparse = false) {
+function noiseBuffer(seconds: number) {
   const buf = ac!.createBuffer(1, Math.ceil(ac!.sampleRate * seconds), ac!.sampleRate);
   const d = buf.getChannelData(0);
-  for (let i = 0; i < d.length; i++) d[i] = sparse ? (Math.random() < 0.0004 ? (Math.random() * 2 - 1) * 0.9 : 0) : Math.random() * 2 - 1;
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
   return buf;
 }
 
@@ -70,29 +69,6 @@ function build() {
   wobble.gain.value = 7; // cents
   lfo.connect(wobble);
   lfo.start();
-}
-
-function startVinyl() {
-  const t = ac!.currentTime;
-  const hiss = ac!.createBufferSource();
-  hiss.buffer = noiseBuffer(2);
-  hiss.loop = true;
-  const hp = ac!.createBiquadFilter();
-  hp.type = "bandpass";
-  hp.frequency.value = 2800;
-  hp.Q.value = 0.4;
-  const hg = ac!.createGain();
-  hg.gain.value = 0.02;
-  hiss.connect(hp).connect(hg).connect(bus!);
-  const crackle = ac!.createBufferSource();
-  crackle.buffer = noiseBuffer(3, true);
-  crackle.loop = true;
-  const cg = ac!.createGain();
-  cg.gain.value = 0.22;
-  crackle.connect(cg).connect(bus!);
-  hiss.start(t);
-  crackle.start(t);
-  vinyl = [hiss, crackle];
 }
 
 function envelope(g: GainNode, t: number, peak: number, decay: number) {
@@ -229,7 +205,6 @@ export function startLofi() {
   master!.gain.linearRampToValueAtTime(0.85, t + 2.5); // fade in
   step = 0;
   nextTime = t + 0.1;
-  startVinyl();
   timer = setInterval(tick, 25);
 }
 
@@ -241,6 +216,4 @@ export function stopLofi() {
   master!.gain.cancelScheduledValues(t);
   master!.gain.setValueAtTime(master!.gain.value, t);
   master!.gain.linearRampToValueAtTime(0, t + 0.6); // fade out
-  vinyl.forEach((v) => v.stop(t + 0.7));
-  vinyl = [];
 }
